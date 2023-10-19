@@ -56,11 +56,8 @@ export default function IndexOptionsPage() {
                 </Layout>
             </React.Fragment>
         )
-        
     } else
     
-
-
     if (loadingUser) {
         console.log("loadingUser")
         return (
