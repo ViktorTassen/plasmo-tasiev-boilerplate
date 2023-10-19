@@ -3,10 +3,10 @@ import { useState, useEffect } from "react";
 
 // Firebase stuff
 import { useFirebase } from "~firebase/hook"
-import { db, app, checkLicenseStatus, getLinkToCustomerPortal, checkTrialLast30Days, createCheckoutSession } from "~firebase"
+import { checkLicenseStatus } from "~firebase"
 
 // MUI stuff
-import { Box, Button, Card, CardActionArea, CircularProgress, Container, Divider, Link, Paper, Stack, Typography } from '@mui/material';
+import { CircularProgress } from '@mui/material';
 
 import Layout from "./OptionsLayout";
 import LoginPage from "./LoginPage";
@@ -14,7 +14,7 @@ import MembershipPage from "./MembershipPage";
 
 
 export default function IndexOptionsPage() {
-    const { user, isLoading, onLogin, onLogout } = useFirebase();
+    const { user, isLoading } = useFirebase();
     const [loadingUser, setLoadingUser] = useState(true);
 
     const [myUser, setMyUser] = useState(null);
@@ -60,12 +60,15 @@ export default function IndexOptionsPage() {
     } else
     
 
+
     if (loadingUser) {
         console.log("loadingUser")
         return (
-            <Typography variant="h6" component="h2" gutterBottom>
-                Loading...
-            </Typography>
+            <Layout>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                    <CircularProgress />
+                </div>
+            </Layout>
         )
     } else
 
