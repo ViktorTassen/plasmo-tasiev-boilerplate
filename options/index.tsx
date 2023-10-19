@@ -60,7 +60,6 @@ export default function IndexOptionsPage() {
     } else
     
 
-
     if (loadingUser) {
         console.log("loadingUser")
         return (

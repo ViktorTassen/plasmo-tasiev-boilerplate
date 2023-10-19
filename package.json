@@ -1,9 +1,9 @@
 {
-  "name": "plasm-firebase",
-  "displayName": "Plasm firebase",
-  "version": "0.0.1",
-  "description": "For testing",
-  "author": "victortasev@gmail.com",
+  "name": "turrex-explorer",
+  "displayName": "Turrex Explorer - Turo Analytics",
+  "version": "2.0",
+  "description": "Turrex Explorer is a browser extension for Turo Hosts. Do your own Turo market research, gain insights and make smarter decisions.",
+  "author": "teamturrex@gmail.com",
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build",
