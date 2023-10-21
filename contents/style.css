@@ -1,0 +1,23 @@
+#turrex-explorer-button {
+    background-color: #fff;
+    border: 1px solid #231f20;
+    border-radius: 0;
+    color: #231f20;
+    cursor: pointer;
+    display: inline-block;
+    font-size: 16px;
+    font-weight: 700;
+    height: 34px;
+    line-height: 33px;
+    outline: none;
+    padding: 0 14px;
+    position: relative;
+    text-align: center;
+    transition: all .5s ease;
+    user-select: none;
+    vertical-align: top;
+    white-space: nowrap;
+    text-transform: none;
+    margin-right: 10px;
+  }
+  
