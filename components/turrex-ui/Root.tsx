@@ -1,15 +1,15 @@
 
 import { createRoot } from 'react-dom/client';
 import React from 'react';
-import TurrexButton from './TurrexButton';
+import TurrexUI from './TurrexUI';
 
 function Root() {
   return (
-    <TurrexButton/>
+    <TurrexUI/>
   );
 }
 
-export function DrawTurrexButton(element) {
+export function DrawTurrexUI(element) {
   console.log('DrawTurrexButton in ', element);
   const turrexButtonDiv = document.createElement("div");
   element.insertAdjacentElement("afterbegin", turrexButtonDiv);

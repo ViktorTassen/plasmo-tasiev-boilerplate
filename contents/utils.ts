@@ -22,4 +22,14 @@ function waitForElm(selector) {
   });
 }
 
-export { waitForElm };
+
+function extractVehicles(vehicles) {
+  const modifiedArray = vehicles.map((obj) => {
+    const { id, make, model } = obj;
+    return { id, make, model };
+  });
+  return modifiedArray;
+}
+
+
+export { waitForElm, extractVehicles };

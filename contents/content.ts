@@ -1,7 +1,9 @@
-import React from "react";
 import type { PlasmoCSConfig } from "plasmo";
-import { waitForElm } from "./utils";
-import { DrawTurrexButton } from "../components/turrex-button/Root";
+import { waitForElm, extractVehicles  } from "./utils";
+import { DrawTurrexUI } from "../components/turrex-ui/Root";
+
+import { myData } from "~components/tabulator-table/data";
+
 
 export const config: PlasmoCSConfig = {
   matches: ["https://turo.com/*/search*"],
@@ -15,11 +17,20 @@ styleElement.textContent = styleText
 document.head.appendChild(styleElement);
 
 
-
-
 waitForElm(".searchFilterBar").then((elm) => {
-  DrawTurrexButton(elm);
+  DrawTurrexUI(elm);
 });
+
+window.addEventListener(
+  'ListToContentPost',
+  function (evt: any) {
+    console.log('ListToContentPost', evt.detail);
+    const vehiclesData = extractVehicles(evt.detail);
+    myData.setData(vehiclesData);
+
+  },
+  false,
+);
 
 
 
