@@ -3,7 +3,7 @@ import { getAuth } from "firebase/auth"
 import { getFirestore } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
-import { collection, doc, getDoc, getDocs, addDoc, onSnapshot, query, where } from "firebase/firestore";
+import { collection, getDocs, addDoc, onSnapshot, query, where } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.PLASMO_PUBLIC_FIREBASE_PUBLIC_API_KEY,
@@ -65,14 +65,21 @@ export async function checkTrialLast30Days(user: any) {
 };
 
 export async function checkLicenseStatus(user: any) {
+  if (!user.uid) {
+    return {license: false, licenseStatus: "no-user"};
+  }
+  console.log('sending query to firestore', new Date())
   const subscriptionsQuery = query(collection(db, 'customers', user.uid, 'subscriptions'), where('status', 'in', ['active', 'trialing']));
+  console.log('query sent to firestore', new Date())
   const querySnapshot = await getDocs(subscriptionsQuery);
-   console.log("(querySnapshot.size", querySnapshot.size)
+  console.log('query received from firestore', new Date())
+
+   console.log("querySnapshot.size", querySnapshot.size)
   if (querySnapshot.size > 0) {
-    console.log("(querySnapshot.size", querySnapshot.size)
+    console.log("querySnapshot.size", querySnapshot.size)
     return {license: true, licenseStatus: querySnapshot.docs[0].data().status};
   } else {
-    return {license: false, licenseStatus: false};
+    return {license: false, licenseStatus: "off"};
   };
 };
 

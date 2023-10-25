@@ -21,8 +21,6 @@ function waitForElm(selector) {
 
   });
 }
-
-
 function extractVehicles(vehicles) {
   const modifiedArray = vehicles.map((obj) => {
     const { id, make, model } = obj;
@@ -30,6 +28,5 @@ function extractVehicles(vehicles) {
   });
   return modifiedArray;
 }
-
 
 export { waitForElm, extractVehicles };

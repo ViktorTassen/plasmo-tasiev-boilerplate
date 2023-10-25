@@ -9,6 +9,8 @@ import {
 import { getFirestore } from "firebase/firestore"
 import { useEffect, useMemo, useState } from "react"
 
+import { sendToBackground } from "@plasmohq/messaging" // manually added
+
 import { app, auth } from "~firebase"
 
 setPersistence(auth, browserLocalPersistence)
@@ -23,6 +25,11 @@ export const useFirebase = () => {
     setIsLoading(true)
     if (user) {
       await auth.signOut()
+      // manually added 
+      await sendToBackground({
+        name: "removeAuth",
+        body: {}
+      })
     }
   }
 
@@ -36,8 +43,20 @@ export const useFirebase = () => {
       }
       if (token) {
         const credential = GoogleAuthProvider.credential(null, token)
+        console.log(credential)
         try {
-          await signInWithCredential(auth, credential)
+          let x = await signInWithCredential(auth, credential)
+          console.log(x)
+
+          // manually added
+          const uid = x.user.uid
+          await sendToBackground({
+            name: "saveAuth",
+            body: {
+              token,
+              uid,
+            }
+          })
         } catch (e) {
           console.error("Could not log in. ", e)
         }
