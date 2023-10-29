@@ -35,6 +35,9 @@ dependencies:
   firebase:
     specifier: 10.3.1
     version: 10.3.1
+  luxon:
+    specifier: ^3.4.3
+    version: 3.4.3
   plasmo:
     specifier: 0.83.0
     version: 0.83.0(react-dom@18.2.0)(react@18.2.0)
@@ -61,6 +64,9 @@ devDependencies:
   '@types/chrome':
     specifier: 0.0.245
     version: 0.0.245
+  '@types/luxon':
+    specifier: ^3.3.3
+    version: 3.3.3
   '@types/node':
     specifier: 20.5.9
     version: 20.5.9
@@ -3435,6 +3441,10 @@ packages:
     resolution: {integrity: sha512-U3PUjAudAdJBeC2pgN8uTIKgxrb4nlDF3SF0++EldXQvQBGkpFZMSnwQiIoDU77tv45VgNkl/L4ouD+rEomujw==}
     dev: false
 
+  /@types/luxon@3.3.3:
+    resolution: {integrity: sha512-/BJF3NT0pRMuxrenr42emRUF67sXwcZCd+S1ksG/Fcf9O7C3kKCY4uJSbKBE4KDUIYr3WMsvfmWD8hRjXExBJQ==}
+    dev: true
+
   /@types/node@20.5.9:
     resolution: {integrity: sha512-PcGNd//40kHAS3sTlzKB9C9XL4K0sTup8nbG5lC14kzEteTNuAFh9u5nA0o5TWnSG2r/JNPRXFVcHJIIeRlmqQ==}
 
@@ -5287,6 +5297,11 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       yallist: 4.0.0
+
+  /luxon@3.4.3:
+    resolution: {integrity: sha512-tFWBiv3h7z+T/tDaoxA8rqTxy1CHV6gHS//QdaH4pulbq/JuBSGgQspQQqcgnwdAx6pNI7cmvz5Sv/addzHmUg==}
+    engines: {node: '>=12'}
+    dev: false
 
   /magic-string@0.30.5:
     resolution: {integrity: sha512-7xlpfBaQaP/T6Vh8MO/EqXSW5En6INHEvEXQiuff7Gku0PWjU3uf6w/j9o7O+SpB5fOAkrI5HeoNgwjEO0pFsA==}

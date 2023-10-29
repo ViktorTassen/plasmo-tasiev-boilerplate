@@ -1,6 +1,4 @@
-import  { browser } from "webextension-polyfill-ts";
+import { browser } from "webextension-polyfill-ts";
 browser.action.onClicked.addListener(() => {
-    browser.runtime.openOptionsPage();
-  });
-
-
+  browser.runtime.openOptionsPage();
+});

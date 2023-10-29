@@ -1,4 +1,7 @@
 import type { PlasmoCSConfig } from "plasmo";
+
+import { sendToBackgroundViaRelay } from "@plasmohq/messaging"
+
 export const config: PlasmoCSConfig = {
   matches: ["https://turo.com/*"],
   world: "MAIN",
@@ -16,13 +19,30 @@ window.fetch = async function (...args) {
 
       if (json.vehicles) {
         // send message to content script
-        const listEvent = new CustomEvent('ListToContentPost', { detail: json.vehicles });
-        document.dispatchEvent(listEvent);
+        sendToBackgroundViaRelay({
+          name: "vehiclesCache",
+          body: {
+            data: json.vehicles,
+            type: "add"
+          }
+         
+        })
+
+        // const listEvent = new CustomEvent('ListToContentPost', { detail: json.vehicles });
+        // document.dispatchEvent(listEvent);
+
       }
 
       if (json.list) {
-        const listEvent = new CustomEvent('ListToContentPost', { detail: json.list });
-        document.dispatchEvent(listEvent);
+        sendToBackgroundViaRelay({
+          name: "vehiclesCache",
+          body: {
+            data: json.list,
+            type: "add"
+          }
+        });
+        // const listEvent = new CustomEvent('ListToContentPost', { detail: json.list });
+        // document.dispatchEvent(listEvent);
       }
 
       return response;

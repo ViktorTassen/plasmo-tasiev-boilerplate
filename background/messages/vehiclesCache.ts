@@ -1,12 +1,14 @@
 import type { PlasmoMessaging } from "@plasmohq/messaging"
 import { Storage } from "@plasmohq/storage"
-const storage = new Storage();
+const storage = new Storage() // for sync storage (isRecording)
 
-let isRecording = false;
+
 async function getDefaultRecording() {
     isRecording = await storage.get("isRecording");
+    return isRecording;
 }
-getDefaultRecording();
+let isRecording =  getDefaultRecording() || false;
+let vehicles = [];
 
 storage.watch({
     "isRecording": (c) => {
@@ -16,38 +18,30 @@ storage.watch({
 });
 
 
-let vehicles = [];
-
 const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
+    const storage = new Storage({ area: 'local' }) // for local storage (vehicles)
+
     switch (req.body.type) {
         case 'add': // add new vehicles from intercepted response
+        console.log('r.body.data: ', req.body)
             if (!isRecording) { console.log('not recording'); return; };
-            console.log('add req.body.data to vehicles');
             // add req.body.data unique vehicles to array
+            vehicles = await storage.get('vehicles') || [];
             const vehicleIds = new Set(vehicles.map(vehicle => vehicle.id));
             const uniqueElements = req.body.data.filter(obj => !vehicleIds.has(obj.id));
             vehicles = vehicles.concat(uniqueElements);
+            // save vehicles to local storage
+            await storage.set('vehicles', vehicles);
             console.log('vehicles length: ', vehicles.length, vehicles);
             break;
-        case 'update': // update (enrich) vehicle
-            console.log('enriching vehicle id: ');
+        case 'clear': // update (enrich) vehicles
+            vehicles = [];
             break;
     };
 
-    // here send vehicles to content script to save to local storage,
-    // 
-
-
-
-
-
-
-
     console.log(await storage.getAll())
-
-    // res.send({
-    //     statusText
-    // });
+    res.send({ status: 'ok' });
 }
 
 export default handler
+

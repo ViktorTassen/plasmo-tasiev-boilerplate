@@ -3,7 +3,7 @@ import { getAuth } from "firebase/auth"
 import { getFirestore } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
-import { collection, getDocs, addDoc, onSnapshot, query, where } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, addDoc, onSnapshot, query, where } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.PLASMO_PUBLIC_FIREBASE_PUBLIC_API_KEY,
@@ -102,17 +102,17 @@ export async function getLinkToCustomerPortal(user: any) {
 
 };
 
-// async function getCustomerDoc(user: any) {
-//   const customerRef = doc(collection(db, "customers"), user.uid);
-//   const customerDoc = await getDoc(customerRef);
-//   if (customerDoc.exists()) {
-//     console.log("Customer exists:", customerDoc.data());
-//     return true;
-//   } else {
-//     console.log("Customer does not exist");
-//     return false;
-//   };
-// };
+export async function getCustomerDoc(user: any) {
+  const customerRef = doc(collection(db, "customers"), user.uid);
+  const customerDoc = await getDoc(customerRef);
+  if (customerDoc.exists()) {
+    console.log("Customer exists:", customerDoc.data());
+    return true;
+  } else {
+    console.log("Customer does not exist");
+    return false;
+  };
+};
 
 
 

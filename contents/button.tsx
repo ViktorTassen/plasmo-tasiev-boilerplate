@@ -23,32 +23,14 @@ const styleCache = createCache({
 })
 export const getStyle = () => styleElement
 
-document.addEventListener(
-    'ListToContentPost',
-    async function (evt: any) {
-      console.log('ListToContentPost', evt.detail);
-      // const resp = await sendToBackground({
-      //   name: "vehiclesCache",
-      //   body: {
-      //     data: evt.detail,
-      //     type: "add"
-      //   }
-       
-      // })
-    },
-    false,
-);
-
 
 
 const TurrexButton = () => {
   const [openModal, setOpenModal] = useStorage("openModalTable", false)
-  
   const handleButtonClick = () => {
     setOpenModal(!openModal);
     console.log('openModal', openModal);
   } 
-
 
   const TurrexButton = styled(Button)({
     textTransform: 'none',
@@ -69,10 +51,7 @@ const TurrexButton = () => {
           sx={{ mr: 2 }}
           onClick={handleButtonClick}
         >
-          <Typography variant="body1" sx={{
-            fontWeight: 700,
-          }}
-          >
+          <Typography sx={{fontWeight: 700}}>
             Turrex Explorer
           </Typography>
 
