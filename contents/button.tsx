@@ -1,6 +1,5 @@
 import React from "react";
 import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from "plasmo"
-import { sendToBackground } from "@plasmohq/messaging"
 import { useStorage } from "@plasmohq/storage/hook"
 
 export const config: PlasmoCSConfig = {

@@ -36,11 +36,11 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
             break;
         case 'clear': // update (enrich) vehicles
             vehicles = [];
+            await storage.set('vehicles', []);
             break;
     };
 
     console.log(await storage.getAll())
-    res.send({ status: 'ok' });
 }
 
 export default handler

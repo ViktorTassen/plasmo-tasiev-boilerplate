@@ -83,6 +83,7 @@ export async function checkLicenseStatus(user: any) {
   };
 };
 
+
 export async function getLinkToCustomerPortal(user: any) {
   const functions = getFunctions(app, 'us-central1');
   const createPortalLink = httpsCallable(
