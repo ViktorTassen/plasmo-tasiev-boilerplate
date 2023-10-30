@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { DateTime } from "luxon";
 // import { TabulatorFull as Tabulator } from 'tabulator-tables';
 import "tabulator-tables/dist/css/tabulator.min.css"; // Import Tabulator stylesheet
-import { ReactTabulator } from 'react-tabulator';
+import { ReactTabulator, type ColumnDefinition } from 'react-tabulator';
 
 import { useStorage } from "@plasmohq/storage/hook"
 import { Storage } from "@plasmohq/storage"
@@ -19,7 +19,7 @@ function TabulatorTable() {
           })
       }) // get vehicles from local storage
 
-    const columnsData = [
+    const columnsData: ColumnDefinition[] = [
           { title: "ID", field: "id", width: 50 },
           { title: "City", field: "address", width: 90 },
           { title: "Type", field: "type", width: 50 },
@@ -28,7 +28,7 @@ function TabulatorTable() {
           { title: "Year", field: "year" },
           { title: "Color", field: "color" },
           { title: "Trim", field: "trim", width: 90 },
-          // { title: "CreatedAt", field: "createdAt", sorter: "date" },
+          { title: "CreatedAt", field: "createdAt", sorter: "date" },
           { title: "Days", field: "daysOn" },
           { title: "Trips", field: "tripsTaken" },
           { title: "T/D", field: "tripDayRatio" },
@@ -48,14 +48,14 @@ function TabulatorTable() {
           { title: "Reviews", field: "numberOfReviews" },
           { title: "StarHost", field: "allStarHost" },
           { title: "HostId", field: "hostId" },
-          // { title: "URL", field: "vehicleURL", width: 200, formatter: "link", formatterParams: { labelField: "vehicleURL", target: "_blank" } },
+          { title: "URL", field: "vehicleURL", width: 200, formatter: "link", formatterParams: { labelField: "vehicleURL", target: "_blank" } },
           { title: "Features", field: "features", width: 300 },
 
           { title: "Avg Market $*", field: "marketValue" },
-          { title: "Depreciation Y1*", field: "ownershipCost1" },
-          { title: "Insurance Y*", field: "insurance" },
-          { title: "Maintenance Y*", field: "maintenance" },
-          { title: "Avg Repairs Y*", field: "repairs" },
+          // { title: "Depreciation Y1*", field: "ownershipCost1" },
+          // { title: "Insurance Y*", field: "insurance" },
+          // { title: "Maintenance Y*", field: "maintenance" },
+          // { title: "Avg Repairs Y*", field: "repairs" },
     ]
 
 

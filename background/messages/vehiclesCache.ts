@@ -23,8 +23,11 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
 
     switch (req.body.type) {
         case 'add': // add new vehicles from intercepted response
-        console.log('r.body.data: ', req.body)
-            if (!isRecording) { console.log('not recording'); return; };
+            console.log('r.body.data: ', req.body)
+            if (!isRecording) { 
+                const storage = new Storage();
+                console.log(await storage.getAll())
+                console.log('not recording'); return; };
             // add req.body.data unique vehicles to array
             vehicles = await storage.get('vehicles') || [];
             const vehicleIds = new Set(vehicles.map(vehicle => vehicle.id));

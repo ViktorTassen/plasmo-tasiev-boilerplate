@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 
 // Firebase stuff
 import { useFirebase } from "~firebase/hook"
-import { checkLicenseStatus } from "~firebase"
+import { checkLicense } from "~firebase"
 
 // MUI stuff
 import { CircularProgress } from '@mui/material';
@@ -17,35 +17,32 @@ export default function IndexOptionsPage() {
     const { user, isLoading } = useFirebase();
     const [loadingUser, setLoadingUser] = useState(true);
 
-    const [myUser, setMyUser] = useState(null);
-
     const [license, setLicense] = useState(false);
-    const [licenseStatus, setLicenseStatus] = useState(null);
+    const [licenseStatus, setLicenseStatus] = useState('no-user');
 
     useEffect(() => {
-        setMyUser(user)
+        setLoadingUser(true);
         if (user) {
             const fetchLicense = async () => {
-                const licenseStatus = await checkLicenseStatus(user);
-                // setLicense(true)
-                setLicense(licenseStatus.license);
-                setLicenseStatus(licenseStatus.licenseStatus);
+                const license = await checkLicense(user.uid);
+                setLicense(license.license);
+                setLicenseStatus(license.licenseStatus);
+                
             }
             fetchLicense();
         }
-        
+        setLoadingUser(false);
     }, [user]);
 
 
-    useEffect(() => {
-        if (isLoading) {
-            setLoadingUser(true);
-        } else {
-            setTimeout(() => {
-            setLoadingUser(false);
-            }, 1000);
-        }
-    }, [isLoading]);
+    // useEffect(() => {
+    //     if (isLoading) {
+    //         setLoadingUser(true);
+    //     } else {
+    //         setLoadingUser(false);
+    //     }
+    // }, [isLoading]);
+
 
 
     if (user) {
@@ -56,28 +53,30 @@ export default function IndexOptionsPage() {
                 </Layout>
             </React.Fragment>
         )
-        
-    } else
-    
 
-    if (loadingUser) {
-        console.log("loadingUser")
-        return (
-            <Layout>
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-                    <CircularProgress />
-                </div>
-            </Layout>
-        )
-    } else
+    }
 
-    if (!myUser) {
-        console.log("!myUser")
+    else
+        if (loadingUser) {
+            console.log("loadingUser")
             return (
                 <Layout>
-                    <LoginPage />
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                        <CircularProgress />
+                    </div>
                 </Layout>
             )
-    }
+        }
+
+        else
+
+            if (!user) {
+                console.log("!myUser")
+                return (
+                    <Layout>
+                        <LoginPage />
+                    </Layout>
+                )
+            }
 
 };

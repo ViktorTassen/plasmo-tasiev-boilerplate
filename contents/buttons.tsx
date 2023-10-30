@@ -1,11 +1,12 @@
 import React, { useEffect } from "react";
 
+
 // Plasmo
 import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from "plasmo"
 import { useStorage } from "@plasmohq/storage/hook"
-import { Storage } from "@plasmohq/storage"
 import { sendToBackground } from "@plasmohq/messaging"
 
+import { checkLicense } from "~firebase"
 
 export const config: PlasmoCSConfig = {
     matches: ["https://turo.com/*/search*"],
@@ -22,8 +23,6 @@ import { Close } from "@mui/icons-material";
 
 // Components and Assets
 import iconCropped from "data-base64:~assets/turrex-icon-cropped.png"
-import { useFirebase } from "~firebase/hook";
-import { on } from "events";
 
 // Plasmo Anchor
 export const getInlineAnchor: PlasmoGetInlineAnchor = () =>
@@ -36,25 +35,34 @@ const styleCache = createCache({
     prepend: true,
     container: styleElement
 })
-export const getStyle = () => styleElement
-
-
-
+export const getStyle = () => styleElement;
 
 
 const TurrexModalButtons = () => {
 
-    const { user, isLoading, onLogin, onLogout } = useFirebase()
-    
-    useEffect(() => {
-        if (user) {
-            console.log("user", user)
-        } else {
-            console.log("no user", user)
-        }
-    }, [user])
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+    // getting firebase uid, license and license status
+    const [uid, setUid] = useStorage("firebaseUid", null)
+    const [license, setLicense] = useStorage("license", true)
+    const [licenseStatus, setLicenseStatus] = useStorage("licenseStatus", "active")
 
-    
+    useEffect(() => {
+        (async () => {
+            if (uid == null) {
+                console.log('buttons uid', uid);
+                setLicense(false)
+                setLicenseStatus("off")
+            } else {
+                console.log('buttons uid', uid);
+                let license = await checkLicense(uid)
+                setLicense(license.license)
+                setLicenseStatus(license.licenseStatus)
+            }
+
+        })()
+    }, [uid]); // ??
+
+
     const TurrexButton = styled(Button)({
         textTransform: 'none',
         border: '1px solid #231f20',
@@ -85,7 +93,7 @@ const TurrexModalButtons = () => {
     const handleRecording = () => {
         setIsRecording(!isRecording);
         setIsEnrichingButton(false);
-        
+
     }
 
     const handleEnriching = () => {
@@ -96,10 +104,9 @@ const TurrexModalButtons = () => {
         setDownload(true)
     };
 
-    useEffect(() => {   
+    useEffect(() => {
         if (isProcess === false) {
             setIsEnrichingButton(false)
-            // setIsRecording(false)
         }
     }, [isProcess])
 
@@ -119,6 +126,7 @@ const TurrexModalButtons = () => {
                 </CloseButton>
                 {/* Buttons Row - Recording, Enrich, Export, Clear */}
                 <Stack direction="row" spacing={2}>
+
                     <TurrexButton
                         onClick={handleRecording}
                         sx={{
@@ -167,11 +175,35 @@ const TurrexModalButtons = () => {
                     }}>
                         <Typography>Clear Results</Typography>
                     </TurrexButton>
+
                 </Stack>
-                {/* InfoText */}
-                <Typography sx={{ marginTop: 2 }}>
-                    Check the <a id="info" href="https://turrex.com/#s_faq" target="_blank" rel="noreferrer">FAQ section</a> for detailed instructions on how to use the extension.
-                </Typography>
+
+                <Box sx={{ marginTop: 2 }} >
+                    {/* InfoText */}
+                    {uid == null && (
+                        <Typography>
+                            Please{' '}
+                            <a href='' id="login-link" target="_blank" onClick={handleLoginClick} rel="noreferrer">
+                                Sign in with Google
+                            </a>{' '}
+                            to start using the Turrex Explorer and refresh the page
+                        </Typography>
+                    )}
+
+                    {licenseStatus == 'off' && (
+                        <Typography>
+                            Table is displaying first 5 saved results. Unlock all features by {' '}
+                            <a id="login-link" href='' target="_blank" onClick={handleLoginClick}>
+                                upgrading to Pro.</a>
+                        </Typography>
+                    )}
+
+
+
+                    <Typography>
+                        Check the <a id="info" href="https://turrex.com/#s_faq" target="_blank" rel="noreferrer">FAQ section</a> for detailed instructions on how to use the extension.
+                    </Typography>
+                </Box>
             </Box>
 
         </CacheProvider>
@@ -183,3 +215,11 @@ const TurrexModalButtons = () => {
 
 
 export default TurrexModalButtons
+
+
+function handleLoginClick(event: React.MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+    sendToBackground({
+        name: "openOptions",
+    });
+}

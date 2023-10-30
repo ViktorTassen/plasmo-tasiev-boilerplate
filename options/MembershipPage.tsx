@@ -56,7 +56,7 @@ export default function MembershipPage(props: MembershipPageProps) {
                         </Typography>
                         <Box sx={{ mt: 2 }}>
                             <Typography>Your current plan is <b>Free</b>.</Typography>
-                            <Typography>Search results are limited to 5.</Typography>
+                            <Typography>Search results are limited to 5 for testing purposes.</Typography>
                             <Divider sx={{ my: 2 }}>
                             </Divider>
                             <Typography>Unlock Unlimited Access to Turo Data + Export to CSV.</Typography>
@@ -113,10 +113,7 @@ export default function MembershipPage(props: MembershipPageProps) {
                             },
                         }}>
                         {isManaging ? <CircularProgress size={37} /> :
-
                             <Typography variant="h6">Manage subscription</Typography>
-                            // <Typography variant="caption">Billing info, invoices</Typography>
-
                         }
                     </Button>
                 </React.Fragment>

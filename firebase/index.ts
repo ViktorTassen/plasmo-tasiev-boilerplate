@@ -2,8 +2,10 @@ import { initializeApp } from "firebase/app"
 import { getAuth } from "firebase/auth"
 import { getFirestore } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-
 import { collection, getDocs, doc, getDoc, addDoc, onSnapshot, query, where } from "firebase/firestore";
+
+// new
+import { getStorage } from "firebase/storage"
 
 const firebaseConfig = {
   apiKey: process.env.PLASMO_PUBLIC_FIREBASE_PUBLIC_API_KEY,
@@ -16,8 +18,12 @@ const firebaseConfig = {
 }
 
 export const app = initializeApp(firebaseConfig)
+
 export const auth = getAuth(app)
 export const db = getFirestore(app);
+
+// new
+export const storage = getStorage(app)
 
 
 export async function createCheckoutSession(user: any, trialLast30Days: boolean) {
@@ -64,19 +70,14 @@ export async function checkTrialLast30Days(user: any) {
   };
 };
 
-export async function checkLicenseStatus(user: any) {
-  if (!user.uid) {
+export async function checkLicense(uid) {
+  if (!uid) {
     return {license: false, licenseStatus: "no-user"};
   }
-  console.log('sending query to firestore', new Date())
-  const subscriptionsQuery = query(collection(db, 'customers', user.uid, 'subscriptions'), where('status', 'in', ['active', 'trialing']));
-  console.log('query sent to firestore', new Date())
-  const querySnapshot = await getDocs(subscriptionsQuery);
-  console.log('query received from firestore', new Date())
 
-   console.log("querySnapshot.size", querySnapshot.size)
+  const subscriptionsQuery = query(collection(db, 'customers', uid, 'subscriptions'), where('status', 'in', ['active', 'trialing']));
+  const querySnapshot = await getDocs(subscriptionsQuery);
   if (querySnapshot.size > 0) {
-    console.log("querySnapshot.size", querySnapshot.size)
     return {license: true, licenseStatus: querySnapshot.docs[0].data().status};
   } else {
     return {license: false, licenseStatus: "off"};
@@ -103,17 +104,17 @@ export async function getLinkToCustomerPortal(user: any) {
 
 };
 
-export async function getCustomerDoc(user: any) {
-  const customerRef = doc(collection(db, "customers"), user.uid);
-  const customerDoc = await getDoc(customerRef);
-  if (customerDoc.exists()) {
-    console.log("Customer exists:", customerDoc.data());
-    return true;
-  } else {
-    console.log("Customer does not exist");
-    return false;
-  };
-};
+// export async function getCustomerDoc(user: any) {
+//   const customerRef = doc(collection(db, "customers"), user.uid);
+//   const customerDoc = await getDoc(customerRef);
+//   if (customerDoc.exists()) {
+//     console.log("Customer exists:", customerDoc.data());
+//     return true;
+//   } else {
+//     console.log("Customer does not exist");
+//     return false;
+//   };
+// };
 
 
 

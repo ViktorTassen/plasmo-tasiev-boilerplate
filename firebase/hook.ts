@@ -4,7 +4,7 @@ import {
   onAuthStateChanged,
   setPersistence,
   signInWithCredential,
-  User
+  type User
 } from "firebase/auth"
 import { getFirestore } from "firebase/firestore"
 import { useEffect, useMemo, useState } from "react"
@@ -46,15 +46,13 @@ export const useFirebase = () => {
         console.log(credential)
         try {
           let x = await signInWithCredential(auth, credential)
-          console.log(x)
-
           // manually added
           const uid = x.user.uid
           await sendToBackground({
             name: "saveAuth",
             body: {
               token,
-              uid,
+              uid
             }
           })
         } catch (e) {
@@ -70,6 +68,13 @@ export const useFirebase = () => {
       setUser(user)
     })
   }, [])
+
+  useEffect(() => {
+    if (user) {
+      onLogin()
+    }
+  }, [user])
+  
 
   return {
     isLoading,

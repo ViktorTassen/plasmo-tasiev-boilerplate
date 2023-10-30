@@ -6,7 +6,6 @@ import { Storage } from "@plasmohq/storage"
 const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
   try {
     const storage = new Storage()
-
     await storage.set("firebaseToken", null)
     await storage.set("firebaseUid", null)
 
