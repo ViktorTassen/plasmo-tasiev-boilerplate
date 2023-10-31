@@ -19,6 +19,7 @@ export default function IndexOptionsPage() {
 
     const [license, setLicense] = useState(false);
     const [licenseStatus, setLicenseStatus] = useState('no-user');
+    
 
     useEffect(() => {
         setLoadingUser(true);
@@ -31,52 +32,38 @@ export default function IndexOptionsPage() {
             }
             fetchLicense();
         }
+        setTimeout(() => {
         setLoadingUser(false);
+        }, 900);
     }, [user]);
 
 
-    // useEffect(() => {
-    //     if (isLoading) {
-    //         setLoadingUser(true);
-    //     } else {
-    //         setLoadingUser(false);
-    //     }
-    // }, [isLoading]);
 
-
-
-    if (user) {
+    if (loadingUser) {
+        console.log("loadingUser");
         return (
-            <React.Fragment>
-                <Layout>
-                    <MembershipPage license={license} licenseStatus={licenseStatus} user={user} />
-                </Layout>
-            </React.Fragment>
-        )
-
+            <Layout>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                    <CircularProgress />
+                </div>
+            </Layout>
+        );
     }
-
-    else
-        if (loadingUser) {
-            console.log("loadingUser")
-            return (
-                <Layout>
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-                        <CircularProgress />
-                    </div>
-                </Layout>
-            )
-        }
-
-        else
-
-            if (!user) {
-                console.log("!myUser")
-                return (
-                    <Layout>
-                        <LoginPage />
-                    </Layout>
-                )
-            }
+    
+    if (!user) {
+        console.log("!myUser");
+        return (
+            <Layout>
+                <LoginPage />
+            </Layout>
+        );
+    }
+    
+    return (
+        <Layout>
+            <MembershipPage license={license} licenseStatus={licenseStatus} user={user} />
+        </Layout>
+    );
+    
 
 };

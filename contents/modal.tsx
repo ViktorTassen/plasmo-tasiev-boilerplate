@@ -43,11 +43,6 @@ const TurrexModal = () => {
         padding: 32,
         overflow: 'auto',
     }) // for custom styles;
-    const CloseButton = styled(IconButton)({
-        position: 'absolute',
-        top: 10,
-        right: 10,
-    }); // for custom styles;
 
     const [openModal, setOpenModal] = useStorage("openModalTable", false)
     const handleClose = () => {
@@ -59,7 +54,7 @@ const TurrexModal = () => {
           <Box id="turrex-modal-buttons">
             {/* Your modal buttons content */}
           </Box>
-          <Box id="turrex-table123">
+          <Box id="turrex-table">
             <TabulatorTable />
           </Box>
         </TurrexModalBox>

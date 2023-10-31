@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from "plasmo"
 import { useStorage } from "@plasmohq/storage/hook"
 
@@ -26,10 +26,15 @@ export const getStyle = () => styleElement
 
 const TurrexButton = () => {
   const [openModal, setOpenModal] = useStorage("openModalTable", false)
+  const [isEnriching, setIsEnriching] = useStorage("isEnriching", false)
+  useEffect(() => {
+    setIsEnriching(false)
+  }, [])
+
   const handleButtonClick = () => {
     setOpenModal(!openModal);
     console.log('openModal', openModal);
-  } 
+  }
 
   const TurrexButton = styled(Button)({
     textTransform: 'none',
@@ -50,12 +55,12 @@ const TurrexButton = () => {
           sx={{ mr: 2 }}
           onClick={handleButtonClick}
         >
-          <Typography sx={{fontWeight: 700}}>
+          <Typography sx={{ fontWeight: 700 }}>
             Turrex Explorer
           </Typography>
 
         </TurrexButton>
-        
+
       </React.Fragment>
     </CacheProvider>
   )
