@@ -96,7 +96,7 @@ export async function checkLicense(uid) {
     const snapshot = await get(ref(database, 'users/' + uid + '/subscriptionStatus'));
     console.log('subscription status', snapshot.val());
 
-    if (snapshot.val() === "active" || snapshot.val() === "trialing") {
+    if (snapshot.val() == "active" || snapshot.val() == "trialing") {
       return {license: true, licenseStatus: snapshot.val()};
     } else {
       return {license: false, licenseStatus: "off"};

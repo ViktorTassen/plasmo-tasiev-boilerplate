@@ -1,4 +1,5 @@
-import React, { useState, version } from "react";
+import React, { useState } from "react";
+import packageJson from '../package.json';
 import { Box, Button, Card, CardActionArea, CircularProgress, Divider, Paper, Stack, Typography } from "@mui/material";
 import { checkTrialLast30Days, createCheckoutSession, getLinkToCustomerPortal } from "~firebase";
 
@@ -96,7 +97,7 @@ export default function MembershipPage(props: MembershipPageProps) {
                     <Typography sx={{ mt: 2 }}>Status: <b>{licenseStatus}</b></Typography>
                     <Typography>License email: <b>{user.email}</b></Typography>
                     <Typography>License ID: <b>{user.uid}</b></Typography>
-                    <Typography>Extension version: {version} </Typography>
+                    <Typography>Extension version: {packageJson.version} </Typography>
 
                     <Button variant="contained"
                         onClick={handleManageClick}
