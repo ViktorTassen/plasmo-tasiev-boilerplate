@@ -4,6 +4,10 @@ import { getFirestore } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { collection, getDocs, doc, getDoc, addDoc, onSnapshot, query, where } from "firebase/firestore";
 
+// old realtime database !!!
+import { getDatabase } from 'firebase/database';
+import { ref, get, set } from 'firebase/database';
+
 // new
 import { getStorage } from "firebase/storage"
 
@@ -22,6 +26,11 @@ export const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 export const db = getFirestore(app);
 
+// old realtime database !!!
+const database = getDatabase(app); 
+
+
+
 // new
 export const storage = getStorage(app)
 
@@ -33,6 +42,7 @@ export async function createCheckoutSession(user: any, trialLast30Days: boolean)
     success_url: process.env.PLASMO_PUBLIC_STRIPE_SUCCESS_URL,
     cancel_url: process.env.PLASMO_PUBLIC_STRIPE_CANCEL_URL,
     trial_from_plan: !trialLast30Days,
+    allow_promotion_codes: true,
   };
 
   addDoc(checkoutSessionsCollection, newCheckoutSession).then((docRef) => {
@@ -80,10 +90,20 @@ export async function checkLicense(uid) {
   if (querySnapshot.size > 0) {
     return {license: true, licenseStatus: querySnapshot.docs[0].data().status};
   } else {
-    return {license: false, licenseStatus: "off"};
+
+    // check if user has a license in the old realtime database
+    // all old users need to have document with stripeId in the new database to generate links to customer portal
+    const snapshot = await get(ref(database, 'users/' + uid + '/subscriptionStatus'));
+    console.log('subscription status', snapshot.val());
+
+    if (snapshot.val() === "active" || snapshot.val() === "trialing") {
+      return {license: true, licenseStatus: snapshot.val()};
+    } else {
+      return {license: false, licenseStatus: "off"};
+    };
+
   };
 };
-
 
 export async function getLinkToCustomerPortal(user: any) {
   const functions = getFunctions(app, 'us-central1');
@@ -104,17 +124,6 @@ export async function getLinkToCustomerPortal(user: any) {
 
 };
 
-// export async function getCustomerDoc(user: any) {
-//   const customerRef = doc(collection(db, "customers"), user.uid);
-//   const customerDoc = await getDoc(customerRef);
-//   if (customerDoc.exists()) {
-//     console.log("Customer exists:", customerDoc.data());
-//     return true;
-//   } else {
-//     console.log("Customer does not exist");
-//     return false;
-//   };
-// };
 
 
 

@@ -24,7 +24,8 @@ export default function MembershipPage(props: MembershipPageProps) {
 
     const handleUpgradeClick = async () => {
         setIsUpgrading(true);
-        const trialLast30Days = await checkTrialLast30Days(user);
+        // const trialLast30Days = await checkTrialLast30Days(user);
+        const trialLast30Days = true; // if true means no more trial
         await createCheckoutSession(user, trialLast30Days);
         // setIsUpgrading(false);
     };
@@ -54,6 +55,7 @@ export default function MembershipPage(props: MembershipPageProps) {
                         <Typography variant="h5">
                             Hello, {user.displayName}
                         </Typography>
+                        <Typography>License ID: <b>{user.uid}</b></Typography>
                         <Box sx={{ mt: 2 }}>
                             <Typography>Your current plan is <b>Free</b>.</Typography>
                             <Typography>Search results are limited to 5 for testing purposes.</Typography>

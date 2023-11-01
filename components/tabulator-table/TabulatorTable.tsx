@@ -118,7 +118,7 @@ function TabulatorTable() {
       layout={"fitDataFill"}
       onRef={(r) => (tableRef.current = r.current)}
       renderVerticalBuffer="500"
-      height="75vh"
+      height="73vh"
     />
   )
 
@@ -190,7 +190,7 @@ async function processVehicles(vehicles) {
         break;
       } // stop processing if user clicked on "Stop enriching" button
 
-      console.log('this vehicle will be enriched: ', vehicle);
+      // console.log('this vehicle will be enriched: ', vehicle);
       // fetching Turo for raw data
       const vehicleDetails = await fetchVehicle(vehicle.id); // Turo API
       await delay(600);
@@ -255,7 +255,11 @@ const addProcessedDataToVehicle = async (vehicle, vehicleDetails, vehicleDailyPr
   vehicle.totalEarned90 = result90.income;
   vehicle.totalEarned365 = result365.income;
 
-  vehicle.marketValue = ((4 * marketValue?.prices.below + marketValue?.prices.average)/5).toFixed(0);
+
+  if (marketValue?.prices?.below && marketValue?.prices?.average) {
+    vehicle.marketValue = ((4 * marketValue?.prices.below + marketValue?.prices.average)/5).toFixed(0);
+  };
+
   if (vehicle.marketValue === 'NaN') {
     vehicle.marketValue = '';
   }
@@ -315,7 +319,7 @@ const fetchVehicle = async (vehicleId: any) => {
 
     if (response.ok) {
       const data = await response.json();
-      console.log('fetchVehicle', data);
+      // console.log('fetchVehicle', data);
       return data;
     } else {
       console.error("Response is not OK. Status: " + response.status);
@@ -341,7 +345,7 @@ const fetchDailyPricing = async (vehicleId: any) => {
     });
     if (response.ok) {
       const data = await response.json();
-      console.log('fetchDailyPricing', data);
+      // console.log('fetchDailyPricing', data);
       return data;
     } else {
       console.error("Response is not OK. Status: " + response.status);
@@ -359,7 +363,7 @@ const fetchMarketValue = async (vehicleVIN: any) => {
     });
     if (response.ok) {
       const data = await response.json();
-      console.log('fetchMarketValue', data);
+      // console.log('fetchMarketValue', data);
       return data;
     } else {
       console.error("Response is not OK. Status: " + response.status);

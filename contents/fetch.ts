@@ -25,6 +25,8 @@ window.fetch = async function (...args) {
             data: json.vehicles,
             type: "add"
           }
+          
+
 
         })
 

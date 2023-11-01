@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from "plasmo"
 import { useStorage } from "@plasmohq/storage/hook"
+import { Storage } from "@plasmohq/storage"
 
 export const config: PlasmoCSConfig = {
   matches: ["https://turo.com/*/search*"],
@@ -13,6 +14,8 @@ import { styled, Button, Typography } from "@mui/material";
 
 export const getInlineAnchor: PlasmoGetInlineAnchor = () =>
   document.querySelector(`.desktopMoreFilters`)
+
+
 
 const styleElement = document.createElement("style")
 const styleCache = createCache({
@@ -27,6 +30,7 @@ export const getStyle = () => styleElement
 const TurrexButton = () => {
   const [openModal, setOpenModal] = useStorage("openModalTable", false)
   const [isEnriching, setIsEnriching] = useStorage("isEnriching", false)
+
   useEffect(() => {
     setIsEnriching(false)
   }, [])

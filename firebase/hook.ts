@@ -23,7 +23,9 @@ export const useFirebase = () => {
 
   const onLogout = async () => {
     setIsLoading(true)
-    if (user) {
+
+    if (user) {     
+
       await auth.signOut()
       // manually added 
       await sendToBackground({
