@@ -83,14 +83,13 @@ export async function checkTrialLast30Days(user: any) {
 export async function checkLicense(uid) {
   if (!uid) {
     return {license: false, licenseStatus: "no-user"};
-  }
+  };
 
   const subscriptionsQuery = query(collection(db, 'customers', uid, 'subscriptions'), where('status', 'in', ['active', 'trialing']));
   const querySnapshot = await getDocs(subscriptionsQuery);
   if (querySnapshot.size > 0) {
     return {license: true, licenseStatus: querySnapshot.docs[0].data().status};
   } else {
-
     // check if user has a license in the old realtime database
     // all old users need to have document with stripeId in the new database to generate links to customer portal
     const snapshot = await get(ref(database, 'users/' + uid + '/subscriptionStatus'));
@@ -105,19 +104,21 @@ export async function checkLicense(uid) {
   };
 };
 
-export async function getLinkToCustomerPortal(user: any) {
+export async function getLinkToCustomerPortal(user: any, setIsManaging) {
   const functions = getFunctions(app, 'us-central1');
   const createPortalLink = httpsCallable(
       functions,
       'ext-firestore-stripe-payments-createPortalLink');
   // request Stripe to create a portal link, and redirect user there
-  createPortalLink({
+  await createPortalLink({
       // get current browser URL
       // returnUrl: "chrome-extension://ledkinjhgknjnbkibicjgaemihkealfg/options.html" // not working
       returnUrl: "https://turrex.com" // can set this to a custom page
   }).then((result: any) => {
       // open new tab with Stripe portal link
       window.open(result.data.url, '_blank');
+      return result.data.url;
+      
   }).catch((error) => {
       // handle error
   });

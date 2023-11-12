@@ -1,7 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from "plasmo"
 import { useStorage } from "@plasmohq/storage/hook"
-import { Storage } from "@plasmohq/storage"
 
 export const config: PlasmoCSConfig = {
   matches: ["https://turo.com/*/search*"],
@@ -10,7 +9,8 @@ export const config: PlasmoCSConfig = {
 
 import createCache from "@emotion/cache";
 import { CacheProvider } from "@emotion/react";
-import { styled, Button, Typography } from "@mui/material";
+import { styled, Button, Typography, Box } from "@mui/material";
+import { checkLicense } from "~firebase";
 
 export const getInlineAnchor: PlasmoGetInlineAnchor = () =>
   document.querySelector(`.desktopMoreFilters`)
@@ -29,9 +29,32 @@ export const getStyle = () => styleElement
 
 const TurrexButton = () => {
   const [openModal, setOpenModal] = useStorage("openModalTable", false)
+  
   const [isEnriching, setIsEnriching] = useStorage("isEnriching", false)
 
+  const [isLoading, setIsLoading] = useState(true);
+  const [uid, setUid] = useStorage("firebaseUid", null)
+  const [license, setLicense] = useStorage("license", { license: true, status: "active" })
+  
   useEffect(() => {
+      (async () => {
+          // setIsLoading(true);
+          if (uid == null) {
+              console.log('buttons uid', uid);
+              await setLicense({ license: false, status: "off" })
+          } else {
+              console.log('buttons uid', uid);
+              let licenseResult = await checkLicense(uid)
+              await setLicense({ license: licenseResult.license, status: licenseResult.licenseStatus })
+          }
+          // setIsLoading(false)
+      })()
+  }, [uid]);
+
+
+
+  useEffect(() => {
+    setOpenModal(false)
     setIsEnriching(false)
   }, [])
 
@@ -40,7 +63,7 @@ const TurrexButton = () => {
     console.log('openModal', openModal);
   }
 
-  const TurrexButton = styled(Button)({
+  const TurrexMainButton = styled(Button)({
     textTransform: 'none',
     border: '1px solid #231f20',
     borderRadius: 0,
@@ -55,7 +78,7 @@ const TurrexButton = () => {
   return (
     <CacheProvider value={styleCache}>
       <React.Fragment>
-        <TurrexButton
+        <TurrexMainButton
           sx={{ mr: 2 }}
           onClick={handleButtonClick}
         >
@@ -63,7 +86,7 @@ const TurrexButton = () => {
             Turrex Explorer
           </Typography>
 
-        </TurrexButton>
+        </TurrexMainButton>
 
       </React.Fragment>
     </CacheProvider>

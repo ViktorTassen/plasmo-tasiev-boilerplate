@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import packageJson from '../package.json';
 import { Box, Button, Card, CardActionArea, CircularProgress, Divider, Paper, Stack, Typography } from "@mui/material";
 import { checkTrialLast30Days, createCheckoutSession, getLinkToCustomerPortal } from "~firebase";
@@ -23,6 +23,12 @@ export default function MembershipPage(props: MembershipPageProps) {
     const [isUpgrading, setIsUpgrading] = useState(false);
     const [isManaging, setIsManaging] = useState(false);
 
+    useEffect(() => {
+        console.log('isManaging', isManaging)
+    }, [isManaging])
+
+
+
     const handleUpgradeClick = async () => {
         setIsUpgrading(true);
         // const trialLast30Days = await checkTrialLast30Days(user);
@@ -33,10 +39,9 @@ export default function MembershipPage(props: MembershipPageProps) {
 
     const handleManageClick = async () => {
         setIsManaging(true);
-        await getLinkToCustomerPortal(user);
+        await getLinkToCustomerPortal(user, setIsManaging);
         setIsManaging(false);
-    };
-
+    }; 
 
 
 

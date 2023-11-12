@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
 import { DateTime } from "luxon";
-// import { TabulatorFull as Tabulator } from 'tabulator-tables';
 import "tabulator-tables/dist/css/tabulator.min.css"; // Import Tabulator stylesheet
 import { ReactTabulator, type ColumnDefinition } from 'react-tabulator';
 
@@ -8,8 +7,9 @@ import { useStorage } from "@plasmohq/storage/hook"
 import { Storage } from "@plasmohq/storage"
 
 
+function TabulatorTable(props) {
+  const license = props.license;
 
-function TabulatorTable() {
   let tableRef = useRef(null);
 
   const [tableData, setTableData] = useStorage({
@@ -63,6 +63,7 @@ function TabulatorTable() {
   const [isEnriching, setIsEnriching] = useStorage("isEnriching", false)
   const [isProcess, setIsProcess] = useStorage("isProcess", false)
 
+
   useEffect(() => {
     if (tableRef.current) {
       if (download === true) {
@@ -72,14 +73,19 @@ function TabulatorTable() {
     }
   }, [download]);
 
-
   useEffect(() => {
     if (tableRef.current) {
-      // Assuming formatVehiclesData and tableData are defined elsewhere
-      const data = formatVehiclesData(tableData);
+      let data;
+      // check if license is active
+      if (license.license  == false) {
+        console.log('license is false')
+        data = formatVehiclesData(tableData.slice(0, 5));
+      } else {
+        data = formatVehiclesData(tableData);
+      }
       tableRef.current.replaceData(data);
     }
-  }, [tableData]); // Empty dependency array to run this effect only once after initial render
+  }, [tableData, license]); // Empty dependency array to run this effect only once after initial render
 
   useEffect(() => {
     if (tableRef.current && isEnriching && !isProcess) {
@@ -110,8 +116,6 @@ function TabulatorTable() {
   }, [isEnriching]);
 
 
-
-
   return (
     <ReactTabulator
       columns={columnsData}
@@ -128,6 +132,7 @@ export default TabulatorTable;
 
 function formatVehiclesData(vehicles) {
   if (!vehicles) return;
+
   const vehiclesData = vehicles.map(vehicle => {
     const vehicleData = {
       // these are available from the search page
@@ -319,7 +324,7 @@ const fetchVehicle = async (vehicleId: any) => {
 
     if (response.ok) {
       const data = await response.json();
-      // console.log('fetchVehicle', data);
+      console.log('fetchVehicle', data);
       return data;
     } else {
       console.error("Response is not OK. Status: " + response.status);

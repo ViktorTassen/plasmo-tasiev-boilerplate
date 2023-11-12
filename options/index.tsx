@@ -15,32 +15,35 @@ import MembershipPage from "./MembershipPage";
 
 export default function IndexOptionsPage() {
     const { user, isLoading } = useFirebase();
-    const [loadingUser, setLoadingUser] = useState(true);
 
+    const [loadingUser, setLoadingUser] = useState(true);
     const [license, setLicense] = useState(false);
-    const [licenseStatus, setLicenseStatus] = useState('no-user');
+    const [licenseStatus, setLicenseStatus] = useState('');
     
 
     useEffect(() => {
         setLoadingUser(true);
-        if (user) {
-            const fetchLicense = async () => {
-                const license = await checkLicense(user.uid);
-                setLicense(license.license);
-                setLicenseStatus(license.licenseStatus);
-                
+
+        (async () => {
+            console.log("useEffect user", user, Date.now());
+
+            if (user) {
+                let licenseResult = await checkLicense(user.uid)
+                setLicense(licenseResult.license);
+                setLicenseStatus(licenseResult.licenseStatus); 
+                setLoadingUser(false);
             }
-            fetchLicense();
-        }
-        setTimeout(() => {
-        setLoadingUser(false);
-        }, 900);
+            if (!user) {
+                setTimeout(() => {
+                setLoadingUser(false);
+                }, 1500);
+            }
+            
+        })();
     }, [user]);
 
 
-
     if (loadingUser) {
-        console.log("loadingUser");
         return (
             <Layout>
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -50,7 +53,7 @@ export default function IndexOptionsPage() {
         );
     }
     
-    if (!user) {
+    if (!user && !isLoading) {
         console.log("!myUser");
         return (
             <Layout>
