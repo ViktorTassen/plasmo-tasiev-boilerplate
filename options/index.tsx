@@ -23,7 +23,6 @@ export default function IndexOptionsPage() {
 
     useEffect(() => {
         setLoadingUser(true);
-
         (async () => {
             console.log("useEffect user", user, Date.now());
 

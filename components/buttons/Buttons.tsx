@@ -2,26 +2,38 @@ import styled from "@emotion/styled";
 import { Close } from "@mui/icons-material";
 import { Button, IconButton, Box, Stack, Typography, CircularProgress } from "@mui/material";
 import { sendToBackground } from "@plasmohq/messaging";
-import { useStorage } from "@plasmohq/storage/hook";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 // Components and Assets
 import iconCropped from "data-base64:~assets/turrex-icon-cropped.png"
 
+import { useStorage } from "@plasmohq/storage/hook"
+import { Storage } from "@plasmohq/storage"
 
-const TurrexModalButtons = (props) => {
-    const license = props.license
-    const uid = props.uid;
+const storageLocal = new Storage({ area: 'local' });
 
+const TurrexModalButtons = () => {
+    const [license, setLicense] = useStorage("license")
+    const [uid, setUid] = useStorage("firebaseUid")
+
+    const [tableData, setTableData] = useStorage({
+        key: "vehicles",
+        instance: new Storage({
+          area: "local",
+        })
+      }) // get vehicles from local storage
+
+    const [qtyLength, setQtyLength] = useState(false)
+
+    const [loading, setLoading] = useState(true)
     // buttons
-    const [openModal, setOpenModal] = useStorage("openModalTable", false)
+    const [openModal, setOpenModal] = useStorage("openModalTable")
     const [isRecording, setIsRecording] = useStorage("isRecording", false)
 
-    const [isEnrichingButton, setIsEnrichingButton] = useStorage("isEnriching", false)
+    const [isEnrichingButton, setIsEnrichingButton] = useStorage("isEnriching")
+    const [qtyAll, setQtyAll] = useStorage("qtyAll")
 
     const [download, setDownload] = useStorage("download", false)
-    const [isProcess, setIsProcess] = useStorage("isProcess")
-
 
     const TurrexButton = styled(Button)({
         textTransform: 'none',
@@ -34,7 +46,7 @@ const TurrexModalButtons = (props) => {
         padding: '0 14px',
     }); // for custom styles;
 
-    const TurrexSignButton = styled(TurrexButton)({
+    const TurrexSignButton = styled(    TurrexButton)({
         width: '200px',
         backgroundColor: '#000',
         color: '#fff',
@@ -55,7 +67,7 @@ const TurrexModalButtons = (props) => {
     });
 
     const TurrexEnrichingButton = styled(TurrexButton)({
-        width: '200px',
+        width: 'max-content',
         backgroundColor: isEnrichingButton ? '#3dfbb8' : 'defaultBackgroundColor',
         color: isEnrichingButton ? '#000' : 'defaultTextColor',
         '&:hover': {
@@ -82,28 +94,37 @@ const TurrexModalButtons = (props) => {
     const handleEnriching = () => {
         setIsEnrichingButton(!isEnrichingButton) // this is for disabling buttons  while enriching
         setIsRecording(false) // turn off recording
+        setQtyAll('')
     }
     const handleExport = () => {
         setDownload(true)
     }
-    const handleClearClick = () => {    
+    const handleClearClick = () => {
         sendToBackground({
             name: "vehiclesCache",
             body: { type: "clear" }
         });
+        setQtyLength(false);
     }
-    useEffect(() => {
-        if (isProcess === false) {
-            setIsEnrichingButton(false)
-        }
-    }, [isProcess])
 
     useEffect(() => {
-        if (isProcess === false) {
-            setIsEnrichingButton(false)
+        if (openModal) {
+           const getVehiclesLength = async () => {
+           let x = await storageLocal.get('vehicles');
+           if (x?.length > 0) setQtyLength(true);
+           
+           }
+        getVehiclesLength();
         }
-    }, []) // when page is refreshed
+    }, [tableData])
 
+    useEffect(() => {
+        if (openModal) {
+            setTimeout(() => {
+                setLoading(false);
+            }, 300);
+        }
+    }, [openModal])
 
     return (
         <Box>
@@ -116,68 +137,80 @@ const TurrexModalButtons = (props) => {
                 <Close />
             </CloseButton>
 
-            {/* Buttons Row */}
-            <Stack direction="row" spacing={2}>
-                {uid ? (
-                    <React.Fragment>
-                        <TurrexRecordingButton onClick={handleRecording}>
-                            <Typography>
-                                {!isRecording ? 'Start recording' : 'Stop recording'}
-                            </Typography>
-                        </TurrexRecordingButton>
+                {!loading && (
+                <React.Fragment>
+                    <Stack direction="row" spacing={2}>
+                        {uid ? (
+                            <React.Fragment>
+                                <TurrexRecordingButton onClick={handleRecording}>
+                                    <Typography>
+                                        {!isRecording ? "Start recording" : "Stop recording"}
+                                    </Typography>
+                                </TurrexRecordingButton>
 
-                        {/* Enrich button */}
-                        <TurrexEnrichingButton onClick={handleEnriching}>
-                            <Stack direction="row" spacing={1} alignItems="center">
-                                <Typography>
-                                    {!isEnrichingButton ? 'Enrich vehicle data ►' : 'Stop enriching'}
-                                    {isEnrichingButton && <CircularProgress size={11} sx={{ ml: 2, color: "#000" }} />}
-                                </Typography>
-                            </Stack>
-                        </TurrexEnrichingButton>
+                                {/* Enrich button */}
+                                { qtyLength && (
+                                <React.Fragment>
+                                    <TurrexEnrichingButton onClick={handleEnriching}>
+                                        <Stack direction="row" alignItems="center">
+                                            <Typography>
+                                                {!isEnrichingButton ? "Enrich vehicle data ►" : "Stop enriching"}
+                                            </Typography>
+                                            <Typography>
+                                                {isEnrichingButton && qtyAll && (
+                                                    <span style={{ marginLeft: 10 }}>{qtyAll}</span>
+                                                )}
+                                            </Typography>
+                                            <Typography>
+                                                {isEnrichingButton && (
+                                                    <CircularProgress size={11} sx={{ color: "#000", ml: "10px" }} />
+                                                )}
+                                            </Typography>
+                                        </Stack>
+                                    </TurrexEnrichingButton>
 
-                        {/* Export button */}
-                        <TurrexButton onClick={handleExport}>
-                            <Typography>Export to CSV ↧</Typography>
-                        </TurrexButton>
+                                    <TurrexButton onClick={handleExport}>
+                                        <Typography>Export to CSV ↧</Typography>
+                                    </TurrexButton>
 
+                                    <TurrexButton onClick={handleClearClick}>
+                                        <Typography>Clear Results</Typography>
+                                    </TurrexButton>
+                                </React.Fragment>
+                                 )}
 
-                        {/* Clear button */}
-                        <TurrexButton onClick={handleClearClick}>
-                            <Typography>Clear Results</Typography>
-                        </TurrexButton>
-                    </React.Fragment>
-                ) : (
-                    <React.Fragment>
-                        {/* Sign in button:  no uid */}
-                        <TurrexSignButton onClick={handleLoginClick}>
-                            <Typography>
-                                Sign in with Google
-                            </Typography>
-                        </TurrexSignButton>
-                    </React.Fragment>
+                            </React.Fragment>
+                           
+                        ) : (
+                            <React.Fragment>
+                                {/* Sign in button: no uid */}
+                                <TurrexSignButton onClick={handleLoginClick}>
+                                    <Typography>Sign in with Google</Typography>
+                                </TurrexSignButton>
+                            </React.Fragment>
+                        )}
+                    </Stack>
+                   
+                </React.Fragment>
                 )}
-
-            </Stack>
 
             {/* InfoText */}
             <Box sx={{ marginTop: 2 }} >
-
-                {uid == null && (
+                {!uid && !loading && (
                     <Typography>
                         Please{' '}
                         <a href='' id="login-link" target="_blank" onClick={handleLoginClick} rel="noreferrer">
                             Sign in with Google
                         </a>{' '}
-                        to start using the Turrex Explorer and refresh the page.
+                        to start using the Turrex Explorer.
                     </Typography>
                 )}
 
-                {license.status == 'off' && uid && (
+                {license?.status == 'off' && uid && (
                     <Typography>
-                        Table is displaying first 5 saved results. Unlock all features by {' '}
+                        Table is limited to first 5 saved results. Unlock all features by {' '}
                         <a id="login-link" href='' target="_blank" onClick={handleLoginClick}>
-                            upgrading to Pro.</a>
+                            upgrading to Pro</a>{' '}and refresh the page.
                     </Typography>
                 )}
 
@@ -185,7 +218,7 @@ const TurrexModalButtons = (props) => {
                     Check the <a id="info" href="https://turrex.com/#s_faq" target="_blank" rel="noreferrer">FAQ section</a> for detailed instructions on how to use the extension.
                 </Typography>
             </Box>
-        </Box>
+        </Box >
     )
 
 }

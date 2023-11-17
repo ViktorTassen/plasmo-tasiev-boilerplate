@@ -10,25 +10,12 @@ async function getDefaultRecording() {
 };
 let isRecording =  getDefaultRecording() || false;
 
-// async function getDefaultLicense() {
-//     license = await storage.get("license");
-//     return license;
-// };
-// let license = getDefaultLicense() || { license: true, status: "active" }
-
 storage.watch({
     "isRecording": (c) => {
         isRecording = c.newValue;
         console.log(isRecording)
     }
 });
-
-// storage.watch({
-//     "license": (c) => {
-//         license = c.newValue;
-//         console.log(license)
-//     }
-// });
 
 
 const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
@@ -47,11 +34,6 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
             const vehicleIds = new Set(vehicles.map(vehicle => vehicle.id));
             const uniqueElements = req.body.data.filter(obj => !vehicleIds.has(obj.id));
             vehicles = vehicles.concat(uniqueElements);
-
-            // // if license is not active, limit vehicles to 5
-            // if (license.license === false) {
-            //     vehicles =  vehicles.slice(0, 5);
-            // };
 
             // save vehicles to local storage
             await storage.set('vehicles', vehicles);

@@ -5,11 +5,12 @@ import { ReactTabulator, type ColumnDefinition } from 'react-tabulator';
 
 import { useStorage } from "@plasmohq/storage/hook"
 import { Storage } from "@plasmohq/storage"
+import { table } from "console";
 
+const storage = new Storage();
+const storageLocal = new Storage({ area: 'local' });
 
-function TabulatorTable(props) {
-  const license = props.license;
-
+function TabulatorTable() {
   let tableRef = useRef(null);
 
   const [tableData, setTableData] = useStorage({
@@ -18,6 +19,58 @@ function TabulatorTable(props) {
       area: "local",
     })
   }) // get vehicles from local storage
+
+  const [license, setLicense] = useStorage("license")
+  const [loading, setLoading] = useState(true)
+  const [download, setDownload] = useStorage("download")
+  const [isEnriching, setIsEnriching] = useStorage("isEnriching")
+
+  useEffect(() => {
+    if (tableRef.current) {
+      if (download === true) {
+        tableRef.current.download("csv", "Turrex-Data.csv");
+        setDownload(false)
+      };
+    }
+  }, [download]);
+
+  useEffect(() => {
+    if (tableRef.current && tableData && license) {
+      let data;
+      if (license.license == false) {
+        data = formatVehiclesData(tableData.slice(0, 5));
+      } else {
+        data = formatVehiclesData(tableData);
+      }
+      tableRef.current.replaceData(data);
+      setLoading(false);
+    }
+  }, [tableData, license]); // Empty dependency array to run this effect only once after initial render
+
+  useEffect(() => {
+    const enrichTableData = async () => {
+      if (isEnriching) {
+        try {
+          let result;
+          if (license.license == false) {
+          result = await processVehicle(tableData.slice(0, 5));
+          } else {
+          result = await processVehicle(tableData);
+          }
+
+          if (!result) {
+            setIsEnriching(false);
+          };
+
+        } catch (error) {
+          console.error('Error processing vehicle:', error);
+          setIsEnriching(false);
+        }
+      }
+    };
+  
+    enrichTableData();
+  }, [tableData, isEnriching]);
 
   const columnsData: ColumnDefinition[] = [
     { title: "ID", field: "id", width: 50 },
@@ -58,64 +111,6 @@ function TabulatorTable(props) {
     // { title: "Avg Repairs Y*", field: "repairs" },
   ]
 
-
-  const [download, setDownload] = useStorage("download")
-  const [isEnriching, setIsEnriching] = useStorage("isEnriching", false)
-  const [isProcess, setIsProcess] = useStorage("isProcess", false)
-
-
-  useEffect(() => {
-    if (tableRef.current) {
-      if (download === true) {
-        tableRef.current.download("csv", "Turrex-Data.csv");
-        setDownload(false)
-      };
-    }
-  }, [download]);
-
-  useEffect(() => {
-    if (tableRef.current) {
-      let data;
-      // check if license is active
-      if (license.license  == false) {
-        console.log('license is false')
-        data = formatVehiclesData(tableData.slice(0, 5));
-      } else {
-        data = formatVehiclesData(tableData);
-      }
-      tableRef.current.replaceData(data);
-    }
-  }, [tableData, license]); // Empty dependency array to run this effect only once after initial render
-
-  useEffect(() => {
-    if (tableRef.current && isEnriching && !isProcess) {
-      (async () => {
-        try {
-          console.log('trying to enrich, setIsProcess becomes True')
-          setIsProcess(true);
-          const storage = new Storage({ area: 'local' });
-          const vehicles = await storage.get('vehicles');
-
-          await processVehicles(vehicles);
-
-        } catch (error) {
-          console.error('Error in useEffect:', error);
-          setIsProcess(false);
-
-        } finally {
-          console.log('Finally');
-          setIsProcess(false);
-        }
-      })();
-    } else if (tableRef.current && !isEnriching) {
-      // if isErinching turns false and isProcess is true, then stop processing
-      console.log('gere')
-      setIsProcess(false);
-    };
-
-  }, [isEnriching]);
-
-
   return (
     <ReactTabulator
       columns={columnsData}
@@ -123,13 +118,15 @@ function TabulatorTable(props) {
       onRef={(r) => (tableRef.current = r.current)}
       renderVerticalBuffer="500"
       height="73vh"
+      // movableColumns="true"
     />
   )
-
 }
+
 export default TabulatorTable;
 
 
+// functions
 function formatVehiclesData(vehicles) {
   if (!vehicles) return;
 
@@ -181,54 +178,63 @@ function formatVehiclesData(vehicles) {
   return vehiclesData;
 
 };
+function calculateBusyDaysAndIncome(data, days) {
+  let endDate = DateTime.now().toFormat('MM/dd/yyyy');
+  let startDate = DateTime.now().minus({ days: days }).toFormat('MM/dd/yyyy');
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  // Filter the objects based on the date range
+  const filteredDates = data.filter(obj => {
+    const objDate = new Date(obj.date);
+    return objDate >= start && objDate <= end;
+  });
 
 
-async function processVehicles(vehicles) {
-  const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-  // const qtyEnriched = vehicles.reduce((acc, vehicle) => (vehicle.createdAt != undefined ? acc + 1 : acc), 0);
-  // let count = 0 + qtyEnriched;
+  let daysUnavailable = 0;
+  let totalEarned = 0;
 
+  filteredDates.forEach(day => {
+    if (day.wholeDayUnavailable) {
+      daysUnavailable++;
+      totalEarned += day.price;
+      // calculate average price
+    }
 
-  for (const vehicle of vehicles) {
-    if (vehicle.createdAt === undefined) {
-      if (!(await getIsProcess())) {
-        break;
-      } // stop processing if user clicked on "Stop enriching" button
+  });
 
-      // console.log('this vehicle will be enriched: ', vehicle);
-      // fetching Turo for raw data
-      const vehicleDetails = await fetchVehicle(vehicle.id); // Turo API
-      await delay(600);
-      const vehicleDailyPricing = await fetchDailyPricing(vehicle.id); // Turo API
-      // await delay(500);
-
-
-      // adding Turo raw data to vehicle object
-      // too much data for localStorage, need to redo
-      // vehicle.vehicleDetails = vehicleDetails;
-      // vehicle.vehicleDailyPricing = vehicleDailyPricing.dailyPricingResponses;
-
-
-
-      const marketValue = await fetchMarketValue(vehicleDetails.vehicle.vin); // VIN API
-      // await fetchOwnershipCost(); // VIN API
-
-      // final step to process raw data and add it to vehicle object for display it table
-      await addProcessedDataToVehicle(vehicle, vehicleDetails, vehicleDailyPricing.dailyPricingResponses, marketValue);
-
-      const storage = new Storage({ area: 'local' })
-      await storage.set('vehicles', vehicles)
-
-
-
-      // count++;
-    };
-  }
-
-
+  return { days: daysUnavailable, income: totalEarned };
 };
+function convertArrayToString(arr: any[]) {
+  const labels = arr.map(item => item.label);
+  return labels.join(", ");
+}
+// async functions
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+const processVehicle = async (vehicles) => {
+  const vehicleToProcess = vehicles?.find(vehicle => vehicle.createdAt === undefined);
+  if (!vehicleToProcess) {
+    console.log('No vehicles to process');
+    return false;
+  }
+  // fetching Turo for raw data
+  const vehicleDetails = await fetchVehicle(vehicleToProcess.id); // Turo API
+  const vehicleDailyPricing = await fetchDailyPricing(vehicleToProcess.id); // Turo API
+  const marketValue = await fetchMarketValue(vehicleDetails.vehicle.vin); // VIN API
+  // await fetchOwnershipCost(); // VIN API
 
+  // final step to process raw data and add it to vehicle object for display it table
+  await addProcessedDataToVehicle(vehicleToProcess, vehicleDetails, vehicleDailyPricing.dailyPricingResponses, marketValue);
+  
+  const qtyEnriched = vehicles.reduce((acc, v) => (v.createdAt !== undefined ? acc + 1 : acc), 0);
+  const qtyTotal = vehicles.length;
 
+  await storage.set("qtyAll", (qtyEnriched + "/" + qtyTotal))
+  await delay(600);
+  await storageLocal.set('vehicles', vehicles);
+
+  return true;
+};
 const addProcessedDataToVehicle = async (vehicle, vehicleDetails, vehicleDailyPricing, marketValue) => {
 
   const result30 = calculateBusyDaysAndIncome(vehicleDailyPricing, 30);
@@ -281,36 +287,6 @@ const addProcessedDataToVehicle = async (vehicle, vehicleDetails, vehicleDailyPr
 
 };
 
-
-function calculateBusyDaysAndIncome(data, days) {
-  let endDate = DateTime.now().toFormat('MM/dd/yyyy');
-  let startDate = DateTime.now().minus({ days: days }).toFormat('MM/dd/yyyy');
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-
-  // Filter the objects based on the date range
-  const filteredDates = data.filter(obj => {
-    const objDate = new Date(obj.date);
-    return objDate >= start && objDate <= end;
-  });
-
-
-  let daysUnavailable = 0;
-  let totalEarned = 0;
-
-  filteredDates.forEach(day => {
-    if (day.wholeDayUnavailable) {
-      daysUnavailable++;
-      totalEarned += day.price;
-      // calculate average price
-    }
-
-  });
-
-  return { days: daysUnavailable, income: totalEarned };
-};
-
-
 const fetchVehicle = async (vehicleId: any) => {
   try {
     const response = await fetch("https://turo.com/api/vehicle/detail?vehicleId=" + vehicleId, {
@@ -359,7 +335,6 @@ const fetchDailyPricing = async (vehicleId: any) => {
     console.error(error);
   };
 };
-
 const fetchMarketValue = async (vehicleVIN: any) => {
   try {
     const response = await fetch(`https://marketvalue.vinaudit.com/getmarketvalue.php?key=1HB7ICF9L0GVH5Q&vin=${vehicleVIN}&period=182&mileage=null&country=USA`, {
@@ -378,25 +353,4 @@ const fetchMarketValue = async (vehicleVIN: any) => {
   };
 
 };
-
-
-
-
-function convertArrayToString(arr: any[]) {
-  const labels = arr.map(item => item.label);
-  return labels.join(", ");
-}
-
-async function getIsProcess() {
-  const storage = new Storage()
-  const isProcess = await storage.get('isProcess')
-  console.log('getIsProcess in loop: ', isProcess);
-  return isProcess;
-}
-
-
-
-
-
-
 

@@ -15,8 +15,6 @@ import { checkLicense } from "~firebase";
 export const getInlineAnchor: PlasmoGetInlineAnchor = () =>
   document.querySelector(`.desktopMoreFilters`)
 
-
-
 const styleElement = document.createElement("style")
 const styleCache = createCache({
   key: "plasmo-emotion-cache",
@@ -29,38 +27,32 @@ export const getStyle = () => styleElement
 
 const TurrexButton = () => {
   const [openModal, setOpenModal] = useStorage("openModalTable", false)
-  
-  const [isEnriching, setIsEnriching] = useStorage("isEnriching", false)
+  const [uid, setUid] = useStorage("firebaseUid")
+  const [license, setLicense] = useStorage("license")
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [uid, setUid] = useStorage("firebaseUid", null)
-  const [license, setLicense] = useStorage("license", { license: true, status: "active" })
-  
-  useEffect(() => {
-      (async () => {
-          // setIsLoading(true);
-          if (uid == null) {
-              console.log('buttons uid', uid);
-              await setLicense({ license: false, status: "off" })
-          } else {
-              console.log('buttons uid', uid);
-              let licenseResult = await checkLicense(uid)
-              await setLicense({ license: licenseResult.license, status: licenseResult.licenseStatus })
-          }
-          // setIsLoading(false)
-      })()
-  }, [uid]);
+  const fetchData = async () => {
+    if (openModal) {
+      let licenseResult = await checkLicense(uid);
+      if (licenseResult.license !== license?.license) {
+        await setLicense({
+          license: licenseResult.license,
+          status: licenseResult.licenseStatus,
+        });
+      }
 
-
+    }
+  };
 
   useEffect(() => {
-    setOpenModal(false)
-    setIsEnriching(false)
-  }, [])
+    if (uid) {
+      fetchData();
+    };
+
+  }, [uid, openModal]);
+
 
   const handleButtonClick = () => {
     setOpenModal(!openModal);
-    console.log('openModal', openModal);
   }
 
   const TurrexMainButton = styled(Button)({
@@ -78,16 +70,11 @@ const TurrexButton = () => {
   return (
     <CacheProvider value={styleCache}>
       <React.Fragment>
-        <TurrexMainButton
-          sx={{ mr: 2 }}
-          onClick={handleButtonClick}
-        >
+        <TurrexMainButton sx={{ mr: 2 }} onClick={handleButtonClick}>
           <Typography sx={{ fontWeight: 700 }}>
             Turrex Explorer
           </Typography>
-
         </TurrexMainButton>
-
       </React.Fragment>
     </CacheProvider>
   )
