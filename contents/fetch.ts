@@ -25,14 +25,9 @@ window.fetch = async function (...args) {
             data: json.vehicles,
             type: "add"
           }
-          
-
-
         })
-
         // const listEvent = new CustomEvent('ListToContentPost', { detail: json.vehicles });
         // document.dispatchEvent(listEvent);
-
       }
 
       if (json.list) {

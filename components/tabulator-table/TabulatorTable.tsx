@@ -1,18 +1,18 @@
 import React, { useRef, useEffect, useState } from "react";
 import { DateTime } from "luxon";
+
+import { ReactTabulator } from 'react-tabulator';
 import "tabulator-tables/dist/css/tabulator.min.css"; // Import Tabulator stylesheet
-import { ReactTabulator, type ColumnDefinition } from 'react-tabulator';
 
 import { useStorage } from "@plasmohq/storage/hook"
 import { Storage } from "@plasmohq/storage"
-import { table } from "console";
-
 const storage = new Storage();
 const storageLocal = new Storage({ area: 'local' });
 
+import columnsData from "./columnsData";
+
 function TabulatorTable() {
   let tableRef = useRef(null);
-
   const [tableData, setTableData] = useStorage({
     key: "vehicles",
     instance: new Storage({
@@ -24,6 +24,13 @@ function TabulatorTable() {
   const [loading, setLoading] = useState(true)
   const [download, setDownload] = useStorage("download")
   const [isEnriching, setIsEnriching] = useStorage("isEnriching")
+  const [filters, setFilters] = useStorage("filters")
+
+  const [dateRange1] = useStorage("1")
+  const [dateRange2] = useStorage("2")
+
+  // // next update
+  // const [selectedCar, setSelectedCar] = useStorage("selectedCar")
 
   useEffect(() => {
     if (tableRef.current) {
@@ -36,16 +43,20 @@ function TabulatorTable() {
 
   useEffect(() => {
     if (tableRef.current && tableData && license) {
+      // Format and replace data
       let data;
-      if (license.license == false) {
-        data = formatVehiclesData(tableData.slice(0, 5));
+      if (license.license === false) {
+        data = modifyData(tableData, dateRange1, dateRange2).slice(0, 5)
       } else {
-        data = formatVehiclesData(tableData);
+        data = modifyData(tableData, dateRange1, dateRange2);
       }
       tableRef.current.replaceData(data);
+
+      // Set loading state
       setLoading(false);
     }
-  }, [tableData, license]); // Empty dependency array to run this effect only once after initial render
+  }, [tableData, license, dateRange1, dateRange2]);
+  // Empty dependency array to run this effect only once after initial render
 
   useEffect(() => {
     const enrichTableData = async () => {
@@ -53,9 +64,9 @@ function TabulatorTable() {
         try {
           let result;
           if (license.license == false) {
-          result = await processVehicle(tableData.slice(0, 5));
+            result = await processVehicle(tableData.slice(0, 5));
           } else {
-          result = await processVehicle(tableData);
+            result = await processVehicle(tableData);
           }
 
           if (!result) {
@@ -68,58 +79,73 @@ function TabulatorTable() {
         }
       }
     };
-  
+
     enrichTableData();
   }, [tableData, isEnriching]);
 
-  const columnsData: ColumnDefinition[] = [
-    { title: "ID", field: "id", width: 50 },
-    { title: "City", field: "address", width: 90 },
-    { title: "Type", field: "type", width: 50 },
-    { title: "Make", field: "make", width: 90 },
-    { title: "Model", field: "model", width: 90 },
-    { title: "Year", field: "year" },
-    { title: "Color", field: "color" },
-    { title: "Trim", field: "trim", width: 90 },
-    { title: "CreatedAt", field: "createdAt", sorter: "date" },
-    { title: "Days", field: "daysOn" },
-    { title: "Trips", field: "tripsTaken" },
-    { title: "T/D", field: "tripDayRatio" },
-    { title: "$day", field: "averagePrice" },
 
-    { title: "Busy30", field: "busy30" },
-    { title: "Busy90", field: "busy90" },
-    { title: "Busy365", field: "busy365" },
+  useEffect(() => {
+    if (tableRef.current) {
+      tableRef.current.on("dataFiltered", function (filters, rows) {
+        // Save filters to storage
+        let headerFilters = tableRef.current.getHeaderFilters();
+        setFilters(headerFilters);
+      });
 
-    { title: "Gross30", field: "totalEarned30" },
-    { title: "Gross90", field: "totalEarned90" },
-    { title: "Gross365", field: "totalEarned365" },
+      filters?.forEach(filter => {
+        if (filter.type == "like") {
+          tableRef.current.setHeaderFilterValue(filter.field, filter.value);
+        } else {
+          const { start, end } = filter.value || {};
+        // Find the input elements corresponding to the custom filter
+        const filterInputs = document.querySelectorAll(`[tabulator-field="${filter.field}"] input`) as NodeListOf<HTMLInputElement>;
+        // Set the values individually
+        if (filterInputs.length === 2) {
+          filterInputs[0].value = start;
+          filterInputs[1].value = end;
+          filterInputs[0].dispatchEvent(new Event('change'));
+        }
+        }
+      });
+    }
+  }, [tableRef.current]);
 
-    { title: "Plan", field: "plan" },
 
-    { title: "Favs", field: "numberOfFavorites" },
-    { title: "Reviews", field: "numberOfReviews" },
-    { title: "StarHost", field: "allStarHost" },
-    { title: "HostId", field: "hostId" },
-    { title: "URL", field: "vehicleURL", width: 200, formatter: "link", formatterParams: { labelField: "vehicleURL", target: "_blank" } },
-    { title: "Features", field: "features", width: 300 },
+  useEffect(() => {
 
-    { title: "Avg Market $*", field: "marketValue" },
-    // { title: "Depreciation Y1*", field: "ownershipCost1" },
-    // { title: "Insurance Y*", field: "insurance" },
-    // { title: "Maintenance Y*", field: "maintenance" },
-    // { title: "Avg Repairs Y*", field: "repairs" },
-  ]
+    const dateRanges = [
+      { id: "1", range: dateRange1 },
+      { id: "2", range: dateRange2 },
+      // Add more date ranges as needed
+    ];
+  
+    dateRanges.forEach(({ id, range }) => {
+      const dateRangeElement = document.querySelector(`[date-range-id="${id}"]`) as HTMLElement;
+      updateDateRangeElement(range, dateRangeElement);
+    });
+  }, [dateRange1, dateRange2]);
+
+
+  // // next update
+  // const rowClick = (e, row) => {
+  //   setSelectedCar(row.getData().id);
+  // };
 
   return (
-    <ReactTabulator
-      columns={columnsData}
-      layout={"fitDataFill"}
-      onRef={(r) => (tableRef.current = r.current)}
-      renderVerticalBuffer="500"
-      height="73vh"
-      // movableColumns="true"
-    />
+    <React.Fragment>
+      <ReactTabulator
+        columns={columnsData}
+        layout={"fitDataFill"}
+        onRef={(r) => (tableRef.current = r.current)}
+        renderVerticalBuffer="500"
+        height="73vh"
+      // // next update
+      // selectable="1"
+      // events={{
+      //   rowClick: rowClick
+      // }}
+      />
+    </React.Fragment>
   )
 }
 
@@ -127,60 +153,18 @@ export default TabulatorTable;
 
 
 // functions
-function formatVehiclesData(vehicles) {
-  if (!vehicles) return;
+function calculateBusyDaysAndIncome(data, days, direction) {
+  console.log('calculateBusyDaysAndIncome', data)
+  let endDate;
+  let startDate;
 
-  const vehiclesData = vehicles.map(vehicle => {
-    const vehicleData = {
-      // these are available from the search page
-      id: vehicle.id,
-      address: vehicle.location.city + ', ' + vehicle.location.state,
-      type: vehicle.type,
-      make: vehicle.make,
-      model: vehicle.model,
-      year: vehicle.year,
-      hostId: vehicle.hostId,
-      allStarHost: vehicle.isAllStarHost, // +
-
-      // these are available from the vehicle page
-      color: vehicle.color,
-      trim: vehicle.trim,
-      createdAt: vehicle.createdAt, // +
-      daysOn: vehicle.daysOn, // +
-      tripsTaken: vehicle.completedTrips, // +
-      tripDayRatio: vehicle.tripDayRatio, // +
-      averagePrice: vehicle.averagePrice,
-
-      // calculated from the vehicle page
-      busy30: vehicle.busy30,
-      busy90: vehicle.busy90,
-      busy365: vehicle.busy365,
-      totalEarned30: vehicle.totalEarned30,
-      totalEarned90: vehicle.totalEarned90,
-      totalEarned365: vehicle.totalEarned365,
-
-      vehicleURL: vehicle.url,
-      plan: vehicle.plan,
-      insuranceCompany: vehicle.insuranceProvider,
-      numberOfFavorites: vehicle.numberOfFavorites,
-      numberOfReviews: vehicle.numberOfReviews,
-      features: vehicle.features,
-
-      // from API
-      marketValue: vehicle.marketValue,
-      ownershipCost1: vehicle.ownershipCost1,
-      insurance: vehicle.insurance,
-      maintenance: vehicle.maintenance,
-      repairs: vehicle.repairs,
-    }
-    return vehicleData;
-  })
-  return vehiclesData;
-
-};
-function calculateBusyDaysAndIncome(data, days) {
-  let endDate = DateTime.now().toFormat('MM/dd/yyyy');
-  let startDate = DateTime.now().minus({ days: days }).toFormat('MM/dd/yyyy');
+  if (direction == 'future') {
+    endDate = DateTime.now().plus({ days: days }).toFormat('MM/dd/yyyy');
+    startDate = DateTime.now().toFormat('MM/dd/yyyy');
+  } else {
+    endDate = DateTime.now().toFormat('MM/dd/yyyy');
+    startDate = DateTime.now().minus({ days: days }).toFormat('MM/dd/yyyy');
+  }
   const start = new Date(startDate);
   const end = new Date(endDate);
 
@@ -190,17 +174,13 @@ function calculateBusyDaysAndIncome(data, days) {
     return objDate >= start && objDate <= end;
   });
 
-
   let daysUnavailable = 0;
   let totalEarned = 0;
 
   filteredDates.forEach(day => {
-    if (day.wholeDayUnavailable) {
       daysUnavailable++;
       totalEarned += day.price;
       // calculate average price
-    }
-
   });
 
   return { days: daysUnavailable, income: totalEarned };
@@ -209,83 +189,87 @@ function convertArrayToString(arr: any[]) {
   const labels = arr.map(item => item.label);
   return labels.join(", ");
 }
-// async functions
+
+
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
 const processVehicle = async (vehicles) => {
   const vehicleToProcess = vehicles?.find(vehicle => vehicle.createdAt === undefined);
   if (!vehicleToProcess) {
     console.log('No vehicles to process');
     return false;
-  }
+  };
   // fetching Turo for raw data
-  const vehicleDetails = await fetchVehicle(vehicleToProcess.id); // Turo API
-  const vehicleDailyPricing = await fetchDailyPricing(vehicleToProcess.id); // Turo API
-  const marketValue = await fetchMarketValue(vehicleDetails.vehicle.vin); // VIN API
-  // await fetchOwnershipCost(); // VIN API
-
+  const vehicleDetails = await fetchVehicle(vehicleToProcess.id);
+  let vehicleDailyPricing = await fetchDailyPricing(vehicleToProcess.id);
+  vehicleDailyPricing = await removeUnusedDataFromDailyPricing(vehicleDailyPricing);
+  // fetching 3d party
+  const marketValue = await fetchMarketValue(vehicleDetails.vehicle.vin);
   // final step to process raw data and add it to vehicle object for display it table
-  await addProcessedDataToVehicle(vehicleToProcess, vehicleDetails, vehicleDailyPricing.dailyPricingResponses, marketValue);
-  
+  await addProcessedDataToVehicle(vehicleToProcess, vehicleDetails, vehicleDailyPricing, marketValue);
+  // count quantities to show in progress bar
   const qtyEnriched = vehicles.reduce((acc, v) => (v.createdAt !== undefined ? acc + 1 : acc), 0);
   const qtyTotal = vehicles.length;
-
+  // save data to storage
   await storage.set("qtyAll", (qtyEnriched + "/" + qtyTotal))
-  await delay(600);
   await storageLocal.set('vehicles', vehicles);
-
+  await delay(100);
   return true;
 };
 const addProcessedDataToVehicle = async (vehicle, vehicleDetails, vehicleDailyPricing, marketValue) => {
+  // const result30 = calculateBusyDaysAndIncome(vehicleDailyPricing, 30, 'past');
+  // const result90 = calculateBusyDaysAndIncome(vehicleDailyPricing, 90, 'past');
+  const result365 = calculateBusyDaysAndIncome(vehicleDailyPricing, 365, 'past');
+  // const resultFuture30 = calculateBusyDaysAndIncome(vehicleDailyPricing, 30, 'future');
 
-  const result30 = calculateBusyDaysAndIncome(vehicleDailyPricing, 30);
-  const result90 = calculateBusyDaysAndIncome(vehicleDailyPricing, 90);
-  const result365 = calculateBusyDaysAndIncome(vehicleDailyPricing, 365);
-
-  // vehicleDetails
+  // Add vehicleDetails data
+  vehicle.address = vehicle.location.city + ', ' + vehicle.location.state;
   vehicle.color = vehicleDetails.color;
   vehicle.trim = vehicleDetails.vehicle.trim;
   vehicle.vin = vehicleDetails.vehicle.vin;
   vehicle.features = convertArrayToString(vehicleDetails.badges);
   vehicle.numberOfFavorites = vehicleDetails.numberOfFavorites;
   vehicle.numberOfReviews = vehicleDetails.numberOfReviews;
+  vehicle.ratings = vehicleDetails.ratings.ratingToHundredth;
   vehicle.url = vehicleDetails.vehicle.url;
-
   vehicle.createdAt = new Date(vehicleDetails.vehicle.listingCreatedTime).toLocaleDateString();
   vehicle.daysOn = ((Date.now() - vehicleDetails.vehicle.listingCreatedTime) / (1000 * 3600 * 24)).toFixed(0);
-
   vehicle.plan = vehicleDetails.currentVehicleProtection.displayName;
-
-
-  // vehicleDailyPricing
-
-  vehicle.busy30 = result30.days;
-  vehicle.busy90 = result90.days;
+  // add vehicleDailyPricing data to vehicle object
+  vehicle.vehicleDailyPricing = vehicleDailyPricing;
+  // Add vehicleDailyPricing data
+  // vehicle.busy30 = result30.days;
+  // vehicle.busy90 = result90.days;
   vehicle.busy365 = result365.days;
-
-  vehicle.totalEarned30 = result30.income;
-  vehicle.totalEarned90 = result90.income;
+  // vehicle.busyFuture30 = resultFuture30.days;
+  // vehicle.totalEarned30 = result30.income;
+  // vehicle.totalEarned90 = result90.income;
   vehicle.totalEarned365 = result365.income;
+  // vehicle.totalEarnedFuture30 = resultFuture30.income;
 
-
+  // Add marketValue data
   if (marketValue?.prices?.below && marketValue?.prices?.average) {
-    vehicle.marketValue = ((4 * marketValue?.prices.below + marketValue?.prices.average)/5).toFixed(0);
-  };
+    vehicle.marketValue = ((4 * marketValue?.prices.below + marketValue?.prices.average) / 5).toFixed(0);
+  }
 
   if (vehicle.marketValue === 'NaN') {
     vehicle.marketValue = '';
   }
 
-  vehicle.averagePrice = (vehicle.totalEarned365 / vehicle.busy365).toFixed(0)
+  // Calculate additional fields
+  vehicle.averagePrice = (vehicle.totalEarned365 / vehicle.busy365).toFixed(0);
   if (vehicle.averagePrice === 'NaN') {
     vehicle.averagePrice = '';
-  };
+  }
 
   vehicle.tripDayRatio = ((vehicle.completedTrips / vehicle.daysOn).toFixed(2));
   if (vehicle.tripDayRatio === 'NaN') {
     vehicle.tripDayRatio = '';
-  };
-
+  }
 };
+
+
+
 
 const fetchVehicle = async (vehicleId: any) => {
   try {
@@ -310,7 +294,7 @@ const fetchVehicle = async (vehicleId: any) => {
   }
 };
 const fetchDailyPricing = async (vehicleId: any) => {
-  let endDate = DateTime.now().plus({ year: 1 }).toFormat('MM/dd/yyyy');
+  let endDate = DateTime.now().plus({ month: 1 }).toFormat('MM/dd/yyyy');
   let startDate = DateTime.now().minus({ year: 1 }).toFormat('MM/dd/yyyy');
   let endDateEncoded = encodeURIComponent(endDate.toString());
   let startDateEncoded = encodeURIComponent(startDate.toString());
@@ -326,8 +310,8 @@ const fetchDailyPricing = async (vehicleId: any) => {
     });
     if (response.ok) {
       const data = await response.json();
-      // console.log('fetchDailyPricing', data);
-      return data;
+      console.log('fetchDailyPricing', data);
+      return data.dailyPricingResponses;
     } else {
       console.error("Response is not OK. Status: " + response.status);
     }
@@ -354,3 +338,84 @@ const fetchMarketValue = async (vehicleVIN: any) => {
 
 };
 
+const removeUnusedDataFromDailyPricing = async (data) => {
+  data = data.filter(item => item.wholeDayUnavailable);
+  data = data.map(item => {
+    const filteredItem = {
+      date: item.date,
+      price: item.price,
+    }
+    return filteredItem;
+  });
+  return data;
+}
+const updateDateRangeElement = (dateRange, dateRangeElement) => {
+  if (dateRange) {
+    const startDate = DateTime.fromISO(dateRange[0].startDate).toFormat('MMM d, yyyy');
+    const endDate = DateTime.fromISO(dateRange[0].endDate).toFormat('MMM d, yyyy');
+    dateRangeElement.innerHTML = `${startDate} - ${endDate}`;
+  }
+};
+
+
+
+function modifyData(data, dateRange1, dateRange2) {
+  if (dateRange1) {
+    loopVehiclesApplyDateRange(data, dateRange1, '1')
+  }
+  if (dateRange2) {
+    loopVehiclesApplyDateRange(data, dateRange2, '2')
+  }
+  return data 
+}
+
+function loopVehiclesApplyDateRange(data, range, id) {
+
+  if (!data) return;
+
+  data.forEach(vehicle => {
+    const result = filterArrayUsingDateRange(vehicle.vehicleDailyPricing, range);
+    // Modify the original vehicle object
+    if (result) {
+      vehicle['busy' + id] = result.days;
+      vehicle['income' + id] = result.income;
+    }
+
+  });
+}
+
+function filterArrayUsingDateRange(data, range) {
+
+  if (!data) return;
+  if (!range) return;
+
+  let startDate = new Date(range[0].startDate).getTime(); // in ms
+  let endDate = new Date(range[0].endDate).getTime() + 86400000;  // in ms
+
+  // Filter the objects based on the date range
+  const filteredDates = data.filter(obj => {
+    const objDate = dateStringConversion(obj.date).getTime();
+    return objDate >= startDate && objDate <= endDate;
+  });
+  const daysUnavailable = filteredDates.length;
+  const totalEarned = filteredDates.reduce((sum, item) => sum + item.price, 0);
+  return { days: daysUnavailable, income: totalEarned };
+}
+
+
+
+function dateStringConversion(dateString) {
+// Parse the string manually to create a Date object
+var parts = dateString.split('-');
+var year = parseInt(parts[0]);
+var month = parseInt(parts[1]) - 1; // Months are zero-based, so subtract 1
+var day = parseInt(parts[2]);
+
+// Create a Date object with the specified date
+var dateObject = new Date(year, month, day);
+
+// Set the time to 10 AM
+dateObject.setHours(10, 0, 0, 0);
+
+return dateObject
+}

@@ -157,7 +157,7 @@ export default function MembershipPage(props: MembershipPageProps) {
                         display: 'flex',
                         justifyContent: 'space-between',
                     }}
-                    href="https://turrex.com/#s_faq"
+                    href="https://turrex.com/instructions"
                     target="_blank"
                 >
                     <Stack>
@@ -165,7 +165,7 @@ export default function MembershipPage(props: MembershipPageProps) {
                             User Guide
                         </Typography>
                         <Typography variant="caption">
-                            Frequent questions + video
+                            Frequent questions
                         </Typography>
                     </Stack>
 

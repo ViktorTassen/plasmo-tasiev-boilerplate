@@ -12,6 +12,9 @@ import { Storage } from "@plasmohq/storage"
 
 const storageLocal = new Storage({ area: 'local' });
 
+const font = "RLBasisGrotesque,Avenir,Helvetica Neue,Helvetica,sans-serif"
+
+
 const TurrexModalButtons = () => {
     const [license, setLicense] = useStorage("license")
     const [uid, setUid] = useStorage("firebaseUid")
@@ -82,6 +85,13 @@ const TurrexModalButtons = () => {
         right: 10,
     }); // for custom styles;
 
+    const ExtPageButton = styled(Button)({
+        position: 'absolute',
+        top: 10,
+        right: 100,
+        textTransform: 'none',
+    }); // for custom styles;
+
 
     const handleClose = () => {
         setOpenModal(false);
@@ -107,6 +117,7 @@ const TurrexModalButtons = () => {
         setQtyLength(false);
     }
 
+
     useEffect(() => {
         if (openModal) {
            const getVehiclesLength = async () => {
@@ -131,11 +142,16 @@ const TurrexModalButtons = () => {
             {/* Header and close button */}
             <Stack direction="row" spacing={2}>
                 <img src={iconCropped} style={{ width: '33px', marginLeft: 10 }} />
-                <Typography sx={{ fontWeight: 700 }}> Turrex Explorer </Typography>
+                <Typography sx={{ fontWeight: 700, fontFamily:font }}> Turrex Explorer 2.0 </Typography>
             </Stack>
             <CloseButton onClick={handleClose}>
                 <Close />
             </CloseButton>
+            <ExtPageButton onClick={handleLoginClick}>
+                <Typography sx={{fontFamily:font}}>
+                   Open extension page (Manage subscription)
+                </Typography>
+            </ExtPageButton>
 
                 {!loading && (
                 <React.Fragment>
@@ -143,7 +159,7 @@ const TurrexModalButtons = () => {
                         {uid ? (
                             <React.Fragment>
                                 <TurrexRecordingButton onClick={handleRecording}>
-                                    <Typography>
+                                    <Typography sx={{fontFamily:font}}>
                                         {!isRecording ? "Start recording" : "Stop recording"}
                                     </Typography>
                                 </TurrexRecordingButton>
@@ -153,15 +169,15 @@ const TurrexModalButtons = () => {
                                 <React.Fragment>
                                     <TurrexEnrichingButton onClick={handleEnriching}>
                                         <Stack direction="row" alignItems="center">
-                                            <Typography>
+                                            <Typography sx={{fontFamily:font}}>
                                                 {!isEnrichingButton ? "Enrich vehicle data ►" : "Stop enriching"}
                                             </Typography>
-                                            <Typography>
+                                            <Typography sx={{fontFamily:font}}>
                                                 {isEnrichingButton && qtyAll && (
                                                     <span style={{ marginLeft: 10 }}>{qtyAll}</span>
                                                 )}
                                             </Typography>
-                                            <Typography>
+                                            <Typography sx={{fontFamily:font}}>
                                                 {isEnrichingButton && (
                                                     <CircularProgress size={11} sx={{ color: "#000", ml: "10px" }} />
                                                 )}
@@ -170,11 +186,11 @@ const TurrexModalButtons = () => {
                                     </TurrexEnrichingButton>
 
                                     <TurrexButton onClick={handleExport}>
-                                        <Typography>Export to CSV ↧</Typography>
+                                        <Typography sx={{fontFamily:font}}>Export to CSV ↧</Typography>
                                     </TurrexButton>
 
                                     <TurrexButton onClick={handleClearClick}>
-                                        <Typography>Clear Results</Typography>
+                                        <Typography sx={{fontFamily:font}}>Clear Results</Typography>
                                     </TurrexButton>
                                 </React.Fragment>
                                  )}
@@ -185,7 +201,7 @@ const TurrexModalButtons = () => {
                             <React.Fragment>
                                 {/* Sign in button: no uid */}
                                 <TurrexSignButton onClick={handleLoginClick}>
-                                    <Typography>Sign in with Google</Typography>
+                                    <Typography sx={{fontFamily:font}}>Sign in with Google</Typography>
                                 </TurrexSignButton>
                             </React.Fragment>
                         )}
@@ -197,7 +213,7 @@ const TurrexModalButtons = () => {
             {/* InfoText */}
             <Box sx={{ marginTop: 2 }} >
                 {!uid && !loading && (
-                    <Typography>
+                    <Typography sx={{fontFamily:font}}>
                         Please{' '}
                         <a href='' id="login-link" target="_blank" onClick={handleLoginClick} rel="noreferrer">
                             Sign in with Google
@@ -207,15 +223,18 @@ const TurrexModalButtons = () => {
                 )}
 
                 {license?.status == 'off' && uid && (
-                    <Typography>
+                    <Typography sx={{fontFamily:font}}>
                         Table is limited to first 5 saved results. Unlock all features by {' '}
                         <a id="login-link" href='' target="_blank" onClick={handleLoginClick}>
                             upgrading to Pro</a>{' '}and refresh the page.
                     </Typography>
                 )}
 
-                <Typography>
-                    Check the <a id="info" href="https://turrex.com/#s_faq" target="_blank" rel="noreferrer">FAQ section</a> for detailed instructions on how to use the extension.
+                <Typography sx={{fontFamily:font}}>
+                    Check the <a id="info" href="https://turrex.com/instructions" target="_blank" rel="noreferrer">instructions</a> on how to use the extension.
+                </Typography>
+                <Typography sx={{fontFamily:font}}>
+                Have ideas for additional features or improvements? Share them by filling out our simple <a id="info" href="https://forms.gle/E3dKmf4La1BUMRai8" target="_blank" rel="noreferrer">Google form.</a> Your feedback shapes next updates!
                 </Typography>
             </Box>
         </Box >

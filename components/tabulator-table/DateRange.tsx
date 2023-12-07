@@ -1,0 +1,142 @@
+
+import { DateRangePicker } from 'react-date-range';
+import "react-date-range/dist/styles.css"; // main css file
+import "react-date-range/dist/theme/default.css"; // theme css file
+
+import { addDays, endOfDay, isSameDay, set, startOfDay, startOfYear, subDays, subMonths, subYears } from 'date-fns';
+
+import { useStorage } from "@plasmohq/storage/hook"
+import { Storage } from "@plasmohq/storage"
+const storage = new Storage();
+
+import { Button, Stack } from '@mui/material';
+
+
+function DateRange(props) {
+  console.log(props);
+  const [savedDateRange, setSavedDateRange, {
+    setRenderValue,
+    setStoreValue,
+  }] = useStorage(props["date-range-id"], (v) => v === undefined ? [{startDate: subMonths(new Date(), 1), endDate: new Date(), key: 'selection'}] : v)
+
+
+  const handleSave = async () => {
+    setStoreValue();
+    storage.set('openModalDateRange', false);
+    storage.set('selectedDateRangeId', null);
+  };
+
+  return (
+    <Stack spacing={2}>
+    <DateRangePicker
+      editableDateInputs={true}
+      onChange={item => setRenderValue([item.selection])}
+      moveRangeOnFirstSelection={false}
+      ranges={
+        [{
+          startDate: new Date(savedDateRange[0].startDate),
+          endDate: new Date(savedDateRange[0].endDate),
+          key: savedDateRange[0].key
+        }]
+      }
+      maxDate={addDays(new Date(), 30)}
+      staticRanges={[
+        ...customRanges
+      ]}
+    />
+    <Button variant="contained" onClick={handleSave}>Save Date Range</Button>
+    </Stack>
+  )
+}
+
+
+const customRanges = [
+  {
+    label: 'Future 30 Days',
+    range: () => ({
+      startDate: startOfDay(new Date()),
+      endDate: startOfDay(addDays(new Date(), 30)),
+    }),
+    isSelected(range) {
+      const definedRange = this.range();
+      return (
+        isSameDay(range.startDate, definedRange.startDate) &&
+        isSameDay(range.endDate, definedRange.endDate)
+      );
+    },
+  },
+
+  {
+    label: 'Last 30 Days',
+    range: () => ({
+      startDate: startOfDay(subDays(new Date(), 30)),
+      endDate: startOfDay(new Date()),
+    }),
+    isSelected(range) {
+      const definedRange = this.range();
+      return (
+        isSameDay(range.startDate, definedRange.startDate) &&
+        isSameDay(range.endDate, definedRange.endDate)
+      );
+    },
+  },
+  {
+    label: 'Last 90 Days',
+    range: () => ({
+      startDate: startOfDay(subDays(new Date(), 90)),
+      endDate: startOfDay(new Date()),
+    }),
+    isSelected(range) {
+      const definedRange = this.range();
+      return (
+        isSameDay(range.startDate, definedRange.startDate) &&
+        isSameDay(range.endDate, definedRange.endDate)
+      );
+    },
+  },
+  {
+    label: 'Last 180 Days',
+    range: () => ({
+      startDate: startOfDay(subDays(new Date(), 180)),
+      endDate: startOfDay(new Date()),
+    }),
+    isSelected(range) {
+      const definedRange = this.range();
+      return (
+        isSameDay(range.startDate, definedRange.startDate) &&
+        isSameDay(range.endDate, definedRange.endDate)
+      );
+    },
+  },
+  {
+    label: 'Last 365 Days',
+    range: () => ({
+      startDate: startOfDay(subYears(new Date(), 1)),
+      endDate: startOfDay(new Date()),
+    }),
+    isSelected(range) {
+      const definedRange = this.range();
+      return (
+        isSameDay(range.startDate, definedRange.startDate) &&
+        isSameDay(range.endDate, definedRange.endDate)
+      );
+    },
+  },
+  {
+    label: "This year",
+    range: () => ({
+      startDate: startOfDay(startOfYear(new Date())),
+      endDate: startOfDay(new Date())
+    }),
+    isSelected(range) {
+      const definedRange = this.range();
+      return (
+        isSameDay(range.startDate, definedRange.startDate) &&
+        isSameDay(range.endDate, definedRange.endDate)
+      );
+    }
+  }
+];
+
+
+export default DateRange;

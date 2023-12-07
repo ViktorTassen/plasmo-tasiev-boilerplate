@@ -1,0 +1,6 @@
+.tabulator-col-content:has(.group-title-date-range) {
+    background-color: #593cfb;
+    color: #eee;
+    cursor: pointer;
+    /* Add any other styles you want to modify */
+  }
