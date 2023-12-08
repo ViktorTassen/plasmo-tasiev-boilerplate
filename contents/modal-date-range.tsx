@@ -85,7 +85,8 @@ const TurrexModalDateRange = () => {
                                 <Close />   
                             </CloseButton>
                             <Stack spacing={2}>
-                            <Typography sx={{ fontWeight: 700 }}>Select Custom Date Range {selectedDateRangeId}</Typography>
+                            <Typography sx={{ fontWeight: 700 }}>Date Range for Column {selectedDateRangeId}</Typography>
+                            <Typography>Select dates within the range of 1 year before today and 1 month after.</Typography>
                             <DateRange date-range-id={selectedDateRangeId} />
                             </Stack>
                         </TurrexModalBox>

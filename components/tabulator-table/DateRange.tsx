@@ -9,7 +9,15 @@ import { useStorage } from "@plasmohq/storage/hook"
 import { Storage } from "@plasmohq/storage"
 const storage = new Storage();
 
-import { Button, Stack } from '@mui/material';
+import { Button, Stack, styled } from '@mui/material';
+
+const SaveButton = styled(Button)({
+backgroundColor: '#593cfb',
+'&:hover': {
+  backgroundColor: '#593cfb',
+},
+}); // for custom styles;
+
 
 
 function DateRange(props) {
@@ -43,8 +51,9 @@ function DateRange(props) {
       staticRanges={[
         ...customRanges
       ]}
+      rangeColors={['#593cfb', '#593cfb', '#593cfb']}
     />
-    <Button variant="contained" onClick={handleSave}>Save Date Range</Button>
+    <SaveButton variant="contained" onClick={handleSave}>Save Date Range</SaveButton>
     </Stack>
   )
 }

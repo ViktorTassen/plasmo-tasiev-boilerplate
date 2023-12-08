@@ -92,8 +92,8 @@ const columnsData: ColumnDefinition[] = [
       storage.set("selectedDateRangeId", column.getDefinition().title);
     }, 
     columns: [
-      { title: "BusyDays", field: "busy1", width: 110, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
-      { title: "Income", field: "income1", width: 110, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
+      { title: "BusyDays1", field: "busy1", width: 110, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
+      { title: "Income1", field: "income1", width: 110, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
     ]
   },
   {
@@ -103,8 +103,8 @@ const columnsData: ColumnDefinition[] = [
       storage.set("selectedDateRangeId", column.getDefinition().title);
     }, 
     columns: [
-      { title: "BusyDays", field: "busy2", width: 110, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
-      { title: "Income", field: "income2", width: 110, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
+      { title: "BusyDays2", field: "busy2", width: 110, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
+      { title: "Income2", field: "income2", width: 110, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
     ]
   },
 

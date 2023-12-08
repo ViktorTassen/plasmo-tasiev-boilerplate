@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { DateTime } from "luxon";
-
+import { utils, writeFileXLSX } from "xlsx";
 import { ReactTabulator } from 'react-tabulator';
 import "tabulator-tables/dist/css/tabulator.min.css"; // Import Tabulator stylesheet
 
@@ -35,14 +35,21 @@ function TabulatorTable() {
   useEffect(() => {
     if (tableRef.current) {
       if (download === true) {
-        tableRef.current.download("csv", "Turrex-Data.csv");
+        // Download CSV with group headers 
+        // tableRef.current.download("csv", "Turrex-Data.csv");
+        tableRef.current.download("xlsx", "data.xlsx", {sheetName:"MyData"})
         setDownload(false)
       };
     }
   }, [download]);
 
   useEffect(() => {
+    
+
+
     if (tableRef.current && tableData && license) {
+      console.log(tableRef.current)
+      // tableRef.current.getColumn("busy1").updateDefinition({title:"Busy1 " + dateRange1[0].startDate + " - " + dateRange1[0].endDate})
       // Format and replace data
       let data;
       if (license.license === false) {
@@ -112,13 +119,12 @@ function TabulatorTable() {
 
 
   useEffect(() => {
-
     const dateRanges = [
       { id: "1", range: dateRange1 },
       { id: "2", range: dateRange2 },
       // Add more date ranges as needed
     ];
-  
+
     dateRanges.forEach(({ id, range }) => {
       const dateRangeElement = document.querySelector(`[date-range-id="${id}"]`) as HTMLElement;
       updateDateRangeElement(range, dateRangeElement);
@@ -139,6 +145,7 @@ function TabulatorTable() {
         onRef={(r) => (tableRef.current = r.current)}
         renderVerticalBuffer="500"
         height="73vh"
+
       // // next update
       // selectable="1"
       // events={{
@@ -368,7 +375,6 @@ function modifyData(data, dateRange1, dateRange2) {
   }
   return data 
 }
-
 function loopVehiclesApplyDateRange(data, range, id) {
 
   if (!data) return;
@@ -383,7 +389,6 @@ function loopVehiclesApplyDateRange(data, range, id) {
 
   });
 }
-
 function filterArrayUsingDateRange(data, range) {
 
   if (!data) return;
@@ -401,9 +406,6 @@ function filterArrayUsingDateRange(data, range) {
   const totalEarned = filteredDates.reduce((sum, item) => sum + item.price, 0);
   return { days: daysUnavailable, income: totalEarned };
 }
-
-
-
 function dateStringConversion(dateString) {
 // Parse the string manually to create a Date object
 var parts = dateString.split('-');
