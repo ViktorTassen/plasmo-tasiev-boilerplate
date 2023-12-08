@@ -53,6 +53,19 @@ function createInput(placeholder) {
 }
 
 
+// var downloadTitleRange1 = 'yay';
+// var downloadTitleRange2 = '';
+
+// storage.watch({
+//   "1": (c) => {
+//     downloadTitleRange1 = c.newValue[0].startDate + " - " + c.newValue[0].endDate;
+//     console.log('watch',c.newValue)
+//     console.log('watch',downloadTitleRange1)
+//   },
+// })
+
+
+
 const menuTitleFormatter = function(cell, formatterParams, onRendered){
 var title = document.createElement("span");
 title.classList.add("group-title-date-range");
@@ -61,9 +74,11 @@ title.innerHTML = "Custom Date Range (Edit)"
 return title;
 }
 
+
 const columnsData: ColumnDefinition[] = [
   {
     title: "Vehicle Information",
+    
     columns: [
       { title: "Location", field: "address", width: 70, headerFilter: "input", headerSort: false },
       { title: "Type", field: "type", width: 70, headerFilter: "select", headerSort: false, editorParams: { values: { "SUV": "SUV", "Car": "Car", "Truck": "Truck", "Van": "Passenger Van", "Cargo Van": "Cargo Van", clearable: true } }, headerFilterParams: { values: { "SUV": "SUV", "Car": "Car", "Truck": "Truck", "Van": "Passenger Van", "Cargo Van": "Cargo Van" } } },
@@ -88,23 +103,25 @@ const columnsData: ColumnDefinition[] = [
   {
     title: "1",
     titleFormatter: menuTitleFormatter,
+    titleDownload: '1',
     headerClick: function (e, column) {
       storage.set("selectedDateRangeId", column.getDefinition().title);
     }, 
     columns: [
-      { title: "BusyDays1", field: "busy1", width: 110, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
-      { title: "Income1", field: "income1", width: 110, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
+      { title: "BusyDays", field: "busy1", width: 110, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
+      { title: "Income", field: "income1", width: 110, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
     ]
   },
   {
     title: "2",
     titleFormatter: menuTitleFormatter,
+    titleDownload: '2',
     headerClick: function (e, column) {
       storage.set("selectedDateRangeId", column.getDefinition().title);
     }, 
     columns: [
-      { title: "BusyDays2", field: "busy2", width: 110, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
-      { title: "Income2", field: "income2", width: 110, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
+      { title: "BusyDays", field: "busy2", width: 110, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
+      { title: "Income", field: "income2", width: 110, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
     ]
   },
 

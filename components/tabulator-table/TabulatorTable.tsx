@@ -1,29 +1,36 @@
 import React, { useRef, useEffect, useState } from "react";
 import { DateTime } from "luxon";
-import { utils, writeFileXLSX } from "xlsx";
 import { ReactTabulator } from 'react-tabulator';
 import "tabulator-tables/dist/css/tabulator.min.css"; // Import Tabulator stylesheet
 
-import { useStorage } from "@plasmohq/storage/hook"
-import { Storage } from "@plasmohq/storage"
+import XLSX from 'xlsx/dist/xlsx.full.min.js';
+declare global {
+  interface Window {
+    XLSX: any;
+  }
+}
+window.XLSX = XLSX;
+
+
+import { useStorage } from "@plasmohq/storage/hook";
+import { Storage } from "@plasmohq/storage";
 const storage = new Storage();
 const storageLocal = new Storage({ area: 'local' });
 
-import columnsData from "./columnsData";
+import columns from "./columnsData";
+
 
 function TabulatorTable() {
   let tableRef = useRef(null);
   const [tableData, setTableData] = useStorage({
-    key: "vehicles",
-    instance: new Storage({
-      area: "local",
-    })
+    key: "vehicles", instance: new Storage({ area: "local" })
   }) // get vehicles from local storage
 
   const [license, setLicense] = useStorage("license")
   const [loading, setLoading] = useState(true)
   const [download, setDownload] = useStorage("download")
   const [isEnriching, setIsEnriching] = useStorage("isEnriching")
+  const [col, setCol] = useState(columns)
   const [filters, setFilters] = useStorage("filters")
 
   const [dateRange1] = useStorage("1")
@@ -35,21 +42,24 @@ function TabulatorTable() {
   useEffect(() => {
     if (tableRef.current) {
       if (download === true) {
-        // Download CSV with group headers 
-        // tableRef.current.download("csv", "Turrex-Data.csv");
-        tableRef.current.download("xlsx", "data.xlsx", {sheetName:"MyData"})
+
+        if (dateRange1) {
+        columns.find(column => column.title === '1').titleDownload = getDateRangeString(dateRange1);
+        }
+        if (dateRange2) {
+          columns.find(column => column.title === '2').titleDownload = getDateRangeString(dateRange2);
+        }
+        tableRef.current.setColumns(columns)
+
+        // change the group column header from 1 to the one you want
+        tableRef.current.download('xlsx', "Turrex-Data.xlsx")
         setDownload(false)
       };
     }
   }, [download]);
 
   useEffect(() => {
-    
-
-
     if (tableRef.current && tableData && license) {
-      console.log(tableRef.current)
-      // tableRef.current.getColumn("busy1").updateDefinition({title:"Busy1 " + dateRange1[0].startDate + " - " + dateRange1[0].endDate})
       // Format and replace data
       let data;
       if (license.license === false) {
@@ -58,13 +68,13 @@ function TabulatorTable() {
         data = modifyData(tableData, dateRange1, dateRange2);
       }
       tableRef.current.replaceData(data);
-
       // Set loading state
       setLoading(false);
     }
   }, [tableData, license, dateRange1, dateRange2]);
-  // Empty dependency array to run this effect only once after initial render
 
+
+  
   useEffect(() => {
     const enrichTableData = async () => {
       if (isEnriching) {
@@ -104,14 +114,14 @@ function TabulatorTable() {
           tableRef.current.setHeaderFilterValue(filter.field, filter.value);
         } else {
           const { start, end } = filter.value || {};
-        // Find the input elements corresponding to the custom filter
-        const filterInputs = document.querySelectorAll(`[tabulator-field="${filter.field}"] input`) as NodeListOf<HTMLInputElement>;
-        // Set the values individually
-        if (filterInputs.length === 2) {
-          filterInputs[0].value = start;
-          filterInputs[1].value = end;
-          filterInputs[0].dispatchEvent(new Event('change'));
-        }
+          // Find the input elements corresponding to the custom filter
+          const filterInputs = document.querySelectorAll(`[tabulator-field="${filter.field}"] input`) as NodeListOf<HTMLInputElement>;
+          // Set the values individually
+          if (filterInputs.length === 2) {
+            filterInputs[0].value = start;
+            filterInputs[1].value = end;
+            filterInputs[0].dispatchEvent(new Event('change'));
+          }
         }
       });
     }
@@ -124,12 +134,14 @@ function TabulatorTable() {
       { id: "2", range: dateRange2 },
       // Add more date ranges as needed
     ];
-
-    dateRanges.forEach(({ id, range }) => {
+    if (tableRef.current) {
+      dateRanges.forEach(({ id, range }) => {
       const dateRangeElement = document.querySelector(`[date-range-id="${id}"]`) as HTMLElement;
+      if (!dateRangeElement) return;
       updateDateRangeElement(range, dateRangeElement);
     });
-  }, [dateRange1, dateRange2]);
+    }
+  }, [download, dateRange1, dateRange2]);
 
 
   // // next update
@@ -137,14 +149,24 @@ function TabulatorTable() {
   //   setSelectedCar(row.getData().id);
   // };
 
+  const options = {
+    downloadDataFormatter: (data) => data,
+    downloadReady: (fileContents, blob) => blob,
+  }
+  const downloadConfig = {
+    columnGroups: true
+  }
+
   return (
     <React.Fragment>
       <ReactTabulator
-        columns={columnsData}
+        columns={col}
         layout={"fitDataFill"}
         onRef={(r) => (tableRef.current = r.current)}
         renderVerticalBuffer="500"
         height="73vh"
+        downloadConfig={downloadConfig}
+        options={options}
 
       // // next update
       // selectable="1"
@@ -185,9 +207,9 @@ function calculateBusyDaysAndIncome(data, days, direction) {
   let totalEarned = 0;
 
   filteredDates.forEach(day => {
-      daysUnavailable++;
-      totalEarned += day.price;
-      // calculate average price
+    daysUnavailable++;
+    totalEarned += day.price;
+    // calculate average price
   });
 
   return { days: daysUnavailable, income: totalEarned };
@@ -365,6 +387,16 @@ const updateDateRangeElement = (dateRange, dateRangeElement) => {
 };
 
 
+const getDateRangeString = (dateRange) => {
+  if (dateRange) {
+    const startDate = DateTime.fromISO(dateRange[0].startDate).toFormat('MMM d, yyyy');
+    const endDate = DateTime.fromISO(dateRange[0].endDate).toFormat('MMM d, yyyy');
+    return `${startDate} - ${endDate}`;
+  }
+};
+
+
+
 
 function modifyData(data, dateRange1, dateRange2) {
   if (dateRange1) {
@@ -373,7 +405,7 @@ function modifyData(data, dateRange1, dateRange2) {
   if (dateRange2) {
     loopVehiclesApplyDateRange(data, dateRange2, '2')
   }
-  return data 
+  return data
 }
 function loopVehiclesApplyDateRange(data, range, id) {
 
@@ -407,17 +439,17 @@ function filterArrayUsingDateRange(data, range) {
   return { days: daysUnavailable, income: totalEarned };
 }
 function dateStringConversion(dateString) {
-// Parse the string manually to create a Date object
-var parts = dateString.split('-');
-var year = parseInt(parts[0]);
-var month = parseInt(parts[1]) - 1; // Months are zero-based, so subtract 1
-var day = parseInt(parts[2]);
+  // Parse the string manually to create a Date object
+  var parts = dateString.split('-');
+  var year = parseInt(parts[0]);
+  var month = parseInt(parts[1]) - 1; // Months are zero-based, so subtract 1
+  var day = parseInt(parts[2]);
 
-// Create a Date object with the specified date
-var dateObject = new Date(year, month, day);
+  // Create a Date object with the specified date
+  var dateObject = new Date(year, month, day);
 
-// Set the time to 10 AM
-dateObject.setHours(10, 0, 0, 0);
+  // Set the time to 10 AM
+  dateObject.setHours(10, 0, 0, 0);
 
-return dateObject
+  return dateObject
 }

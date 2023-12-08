@@ -186,7 +186,7 @@ const TurrexModalButtons = () => {
                                     </TurrexEnrichingButton>
 
                                     <TurrexButton onClick={handleExport}>
-                                        <Typography sx={{fontFamily:font}}>Export to CSV ↧</Typography>
+                                        <Typography sx={{fontFamily:font}}>Export to XLSX ↧</Typography>
                                     </TurrexButton>
 
                                     <TurrexButton onClick={handleClearClick}>
