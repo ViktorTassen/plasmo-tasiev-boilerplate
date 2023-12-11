@@ -38,7 +38,7 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
             let currentTimeMS = Date.now();
             if (currentTimeMS - timeMS > 1000) {
                 await storage.set('uniqueElementsAdded', uniqueElements.length);
-                console.log('vehicles length: ', vehicles.length, vehicles);
+                // console.log('vehicles length: ', vehicles.length, vehicles);
                 timeMS = currentTimeMS;
             }
             timeMS = Date.now();

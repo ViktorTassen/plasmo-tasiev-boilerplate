@@ -89,12 +89,7 @@ function TabulatorTable() {
       if (!filtersListener) {
       setFiltersListener(true);
         tableRef.current.on("dataFiltered", (headerFilters, rows) => {
-          console.log("headerFilters", headerFilters)
-          console.log("filters", filters)
-          console.log(JSON.stringify(headerFilters) == JSON.stringify(filters))
-
           if (JSON.stringify(headerFilters) != JSON.stringify(filters)) {
-          console.log('filters triggered write operation')
           setFilters(headerFilters);
           }
         });
@@ -173,7 +168,7 @@ export default TabulatorTable;
 
 // functions
 function calculateBusyDaysAndIncome(data, days, direction) {
-  console.log('calculateBusyDaysAndIncome', data)
+  // console.log('calculateBusyDaysAndIncome', data)
   let endDate;
   let startDate;
 
@@ -314,7 +309,7 @@ const fetchVehicle = async (vehicleId: any) => {
 
     if (response.ok) {
       const data = await response.json();
-      console.log('fetchVehicle', data);
+      // console.log('fetchVehicle', data);
       return data;
     } else {
       console.error("Response is not OK. Status: " + response.status);
@@ -340,7 +335,7 @@ const fetchDailyPricing = async (vehicleId: any) => {
     });
     if (response.ok) {
       const data = await response.json();
-      console.log('fetchDailyPricing', data);
+      // console.log('fetchDailyPricing', data);
       return data.dailyPricingResponses;
     } else {
       console.error("Response is not OK. Status: " + response.status);

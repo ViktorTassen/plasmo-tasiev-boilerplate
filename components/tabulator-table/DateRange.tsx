@@ -21,7 +21,7 @@ backgroundColor: '#593cfb',
 
 
 function DateRange(props) {
-  console.log(props);
+  // console.log(props);
   const [savedDateRange, setSavedDateRange, {
     setRenderValue,
     setStoreValue,
