@@ -5,6 +5,7 @@ import { useStorage } from "@plasmohq/storage/hook"
 import TabulatorTable from "../components/tabulator-table/TabulatorTable";
 
 import customStyles from "data-text:./style.css"
+const font = "RLBasisGrotesque,Avenir,Helvetica Neue,Helvetica,sans-serif"
 
 export const config: PlasmoCSConfig = {
   matches: ["https://turo.com/*/search*"],
@@ -14,7 +15,7 @@ export const config: PlasmoCSConfig = {
 // MUI
 import createCache from "@emotion/cache";
 import { CacheProvider } from "@emotion/react";
-import { styled, Box, Modal } from "@mui/material";
+import { styled, Box, Modal, Typography } from "@mui/material";
 import Buttons from "~components/buttons/Buttons";
 
 const TurrexModalBox = styled(Box)({
@@ -78,6 +79,9 @@ const TurrexModal = () => {
               <Box id="turrex-table">
                 <TabulatorTable />
               </Box>
+              <Typography sx={{fontFamily:font}}>
+                Have ideas for additional features or improvements? Share them by filling out our simple <a id="info" href="https://forms.gle/E3dKmf4La1BUMRai8" target="_blank" rel="noreferrer">Google form.</a> Your feedback shapes next updates!
+              </Typography>
             </TurrexModalBox>
           </Modal>
         </React.Fragment>

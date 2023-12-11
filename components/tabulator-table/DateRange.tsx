@@ -3,7 +3,7 @@ import { DateRangePicker } from 'react-date-range';
 import "react-date-range/dist/styles.css"; // main css file
 import "react-date-range/dist/theme/default.css"; // theme css file
 
-import { addDays, endOfDay, isSameDay, set, startOfDay, startOfYear, subDays, subMonths, subYears } from 'date-fns';
+import { addDays, isSameDay, startOfDay, startOfYear, subDays, subMonths, subYears } from 'date-fns';
 
 import { useStorage } from "@plasmohq/storage/hook"
 import { Storage } from "@plasmohq/storage"

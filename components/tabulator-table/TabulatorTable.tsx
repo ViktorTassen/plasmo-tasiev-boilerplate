@@ -1,29 +1,29 @@
 import React, { useRef, useEffect, useState } from "react";
 import { DateTime } from "luxon";
 import { ReactTabulator } from 'react-tabulator';
-import "tabulator-tables/dist/css/tabulator.min.css"; // Import Tabulator stylesheet
-
+import "tabulator-tables/dist/css/tabulator.min.css";
 import XLSX from 'xlsx/dist/xlsx.full.min.js';
+import { useStorage } from "@plasmohq/storage/hook";
+import { Storage } from "@plasmohq/storage";
+import columns from "./columnsData";
+
 declare global {
   interface Window {
     XLSX: any;
   }
 }
+
 window.XLSX = XLSX;
-
-
-import { useStorage } from "@plasmohq/storage/hook";
-import { Storage } from "@plasmohq/storage";
 const storage = new Storage();
 const storageLocal = new Storage({ area: 'local' });
 
-import columns from "./columnsData";
+
 
 
 function TabulatorTable() {
   let tableRef = useRef(null);
   const [tableData, setTableData] = useStorage({
-    key: "vehicles", instance: new Storage({ area: "local" })
+    key: "vehicles", instance: storageLocal
   }) // get vehicles from local storage
 
   const [license, setLicense] = useStorage("license")
@@ -32,6 +32,7 @@ function TabulatorTable() {
   const [isEnriching, setIsEnriching] = useStorage("isEnriching")
   const [col, setCol] = useState(columns)
   const [filters, setFilters] = useStorage("filters")
+  const [filtersListener, setFiltersListener] = useState(false)
 
   const [dateRange1] = useStorage("1")
   const [dateRange2] = useStorage("2")
@@ -40,56 +41,37 @@ function TabulatorTable() {
   // const [selectedCar, setSelectedCar] = useStorage("selectedCar")
 
   useEffect(() => {
-    if (tableRef.current) {
-      if (download === true) {
-
-        if (dateRange1) {
+    if (tableRef.current && download === true) {
+      if (dateRange1) {
         columns.find(column => column.title === '1').titleDownload = getDateRangeString(dateRange1);
-        }
-        if (dateRange2) {
-          columns.find(column => column.title === '2').titleDownload = getDateRangeString(dateRange2);
-        }
-        tableRef.current.setColumns(columns)
-
-        // change the group column header from 1 to the one you want
-        tableRef.current.download('xlsx', "Turrex-Data.xlsx")
-        setDownload(false)
-      };
-    }
-  }, [download]);
-
-  useEffect(() => {
-    if (tableRef.current && tableData && license) {
-      // Format and replace data
-      let data;
-      if (license.license === false) {
-        data = modifyData(tableData, dateRange1, dateRange2).slice(0, 5)
-      } else {
-        data = modifyData(tableData, dateRange1, dateRange2);
       }
+      if (dateRange2) {
+        columns.find(column => column.title === '2').titleDownload = getDateRangeString(dateRange2);
+      }
+      tableRef.current.setColumns(columns);
+      tableRef.current.download('xlsx', "Turrex-Data.xlsx");
+      setDownload(false);
+    }
+  }, [download, dateRange1, dateRange2]);
+
+
+ useEffect(() => {
+    if (tableRef.current && tableData && license) {
+      const data = modifyData(tableData, dateRange1, dateRange2).slice(0, license.license ? undefined : 5);
       tableRef.current.replaceData(data);
-      // Set loading state
       setLoading(false);
     }
   }, [tableData, license, dateRange1, dateRange2]);
 
 
-  
   useEffect(() => {
     const enrichTableData = async () => {
       if (isEnriching) {
         try {
-          let result;
-          if (license.license == false) {
-            result = await processVehicle(tableData.slice(0, 5));
-          } else {
-            result = await processVehicle(tableData);
-          }
-
+          const result = await processVehicle(tableData.slice(0, license.license ? undefined : 5));
           if (!result) {
             setIsEnriching(false);
-          };
-
+          }
         } catch (error) {
           console.error('Error processing vehicle:', error);
           setIsEnriching(false);
@@ -98,25 +80,32 @@ function TabulatorTable() {
     };
 
     enrichTableData();
-  }, [tableData, isEnriching]);
+  }, [tableData, isEnriching, license]);
 
 
   useEffect(() => {
     if (tableRef.current) {
-      tableRef.current.on("dataFiltered", function (filters, rows) {
-        // Save filters to storage
-        let headerFilters = tableRef.current.getHeaderFilters();
-        setFilters(headerFilters);
-      });
+
+      if (!filtersListener) {
+      setFiltersListener(true);
+        tableRef.current.on("dataFiltered", (headerFilters, rows) => {
+          console.log("headerFilters", headerFilters)
+          console.log("filters", filters)
+          console.log(JSON.stringify(headerFilters) == JSON.stringify(filters))
+
+          if (JSON.stringify(headerFilters) != JSON.stringify(filters)) {
+          console.log('filters triggered write operation')
+          setFilters(headerFilters);
+          }
+        });
+      };
 
       filters?.forEach(filter => {
-        if (filter.type == "like") {
+        if (filter.type === "like") {
           tableRef.current.setHeaderFilterValue(filter.field, filter.value);
         } else {
           const { start, end } = filter.value || {};
-          // Find the input elements corresponding to the custom filter
           const filterInputs = document.querySelectorAll(`[tabulator-field="${filter.field}"] input`) as NodeListOf<HTMLInputElement>;
-          // Set the values individually
           if (filterInputs.length === 2) {
             filterInputs[0].value = start;
             filterInputs[1].value = end;
@@ -125,21 +114,21 @@ function TabulatorTable() {
         }
       });
     }
-  }, [tableRef.current]);
+  }, [filters]);
 
 
   useEffect(() => {
     const dateRanges = [
       { id: "1", range: dateRange1 },
       { id: "2", range: dateRange2 },
-      // Add more date ranges as needed
     ];
     if (tableRef.current) {
       dateRanges.forEach(({ id, range }) => {
-      const dateRangeElement = document.querySelector(`[date-range-id="${id}"]`) as HTMLElement;
-      if (!dateRangeElement) return;
-      updateDateRangeElement(range, dateRangeElement);
-    });
+        const dateRangeElement = document.querySelector(`[date-range-id="${id}"]`) as HTMLElement;
+        if (dateRangeElement) {
+          updateDateRangeElement(range, dateRangeElement);
+        }
+      });
     }
   }, [download, dateRange1, dateRange2]);
 
@@ -152,10 +141,11 @@ function TabulatorTable() {
   const options = {
     downloadDataFormatter: (data) => data,
     downloadReady: (fileContents, blob) => blob,
-  }
+  };
+
   const downloadConfig = {
     columnGroups: true
-  }
+  };
 
   return (
     <React.Fragment>
@@ -164,7 +154,7 @@ function TabulatorTable() {
         layout={"fitDataFill"}
         onRef={(r) => (tableRef.current = r.current)}
         renderVerticalBuffer="500"
-        height="73vh"
+        height="75vh"
         downloadConfig={downloadConfig}
         options={options}
 
@@ -242,7 +232,7 @@ const processVehicle = async (vehicles) => {
   // save data to storage
   await storage.set("qtyAll", (qtyEnriched + "/" + qtyTotal))
   await storageLocal.set('vehicles', vehicles);
-  await delay(100);
+  await delay(1000);
   return true;
 };
 const addProcessedDataToVehicle = async (vehicle, vehicleDetails, vehicleDailyPricing, marketValue) => {
@@ -264,6 +254,17 @@ const addProcessedDataToVehicle = async (vehicle, vehicleDetails, vehicleDailyPr
   vehicle.createdAt = new Date(vehicleDetails.vehicle.listingCreatedTime).toLocaleDateString();
   vehicle.daysOn = ((Date.now() - vehicleDetails.vehicle.listingCreatedTime) / (1000 * 3600 * 24)).toFixed(0);
   vehicle.plan = vehicleDetails.currentVehicleProtection.displayName;
+
+  if (vehicleDetails.rate.dailyDistance.scalar) {
+    vehicle.dailyDistance = vehicleDetails.rate.dailyDistance.scalar;
+  } else {
+    vehicle.dailyDistance = 999;
+  }
+  
+  vehicle.weeklyDiscountPercentage = vehicleDetails.rate.weeklyDiscountPercentage;
+  vehicle.monthlyDiscountPercentage = vehicleDetails.rate.monthlyDiscountPercentage;
+
+  
   // add vehicleDailyPricing data to vehicle object
   vehicle.vehicleDailyPricing = vehicleDailyPricing;
   // Add vehicleDailyPricing data
@@ -385,8 +386,6 @@ const updateDateRangeElement = (dateRange, dateRangeElement) => {
     dateRangeElement.innerHTML = `${startDate} - ${endDate}`;
   }
 };
-
-
 const getDateRangeString = (dateRange) => {
   if (dateRange) {
     const startDate = DateTime.fromISO(dateRange[0].startDate).toFormat('MMM d, yyyy');
@@ -408,9 +407,7 @@ function modifyData(data, dateRange1, dateRange2) {
   return data
 }
 function loopVehiclesApplyDateRange(data, range, id) {
-
   if (!data) return;
-
   data.forEach(vehicle => {
     const result = filterArrayUsingDateRange(vehicle.vehicleDailyPricing, range);
     // Modify the original vehicle object

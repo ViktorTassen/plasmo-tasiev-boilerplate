@@ -123,7 +123,6 @@ const TurrexModalButtons = () => {
            const getVehiclesLength = async () => {
            let x = await storageLocal.get('vehicles');
            if (x?.length > 0) setQtyLength(true);
-           
            }
         getVehiclesLength();
         }
@@ -232,9 +231,6 @@ const TurrexModalButtons = () => {
 
                 <Typography sx={{fontFamily:font}}>
                     Check the <a id="info" href="https://turrex.com/instructions" target="_blank" rel="noreferrer">instructions</a> on how to use the extension.
-                </Typography>
-                <Typography sx={{fontFamily:font}}>
-                Have ideas for additional features or improvements? Share them by filling out our simple <a id="info" href="https://forms.gle/E3dKmf4La1BUMRai8" target="_blank" rel="noreferrer">Google form.</a> Your feedback shapes next updates!
                 </Typography>
             </Box>
         </Box >

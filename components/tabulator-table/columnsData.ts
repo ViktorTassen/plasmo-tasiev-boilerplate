@@ -53,24 +53,13 @@ function createInput(placeholder) {
 }
 
 
-// var downloadTitleRange1 = 'yay';
-// var downloadTitleRange2 = '';
-
-// storage.watch({
-//   "1": (c) => {
-//     downloadTitleRange1 = c.newValue[0].startDate + " - " + c.newValue[0].endDate;
-//     console.log('watch',c.newValue)
-//     console.log('watch',downloadTitleRange1)
-//   },
-// })
-
 
 
 const menuTitleFormatter = function(cell, formatterParams, onRendered){
 var title = document.createElement("span");
 title.classList.add("group-title-date-range");
 title.setAttribute("date-range-id", cell.getValue());
-title.innerHTML = "Custom Date Range (Edit)"
+title.innerHTML = "Click to select Date Range"
 return title;
 }
 
@@ -98,12 +87,14 @@ const columnsData: ColumnDefinition[] = [
       { title: "Trips", field: "completedTrips", width: 80, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
       { title: "T/D", field: "tripDayRatio", width: 80, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
       { title: "$day", field: "averagePrice", width: 80, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
+      { title: "MaxDistanceDaily", field: "dailyDistance", width: 110, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
+      { title: "%WeeklyDiscount", field: "weeklyDiscountPercentage", width: 80, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
+      { title: "%MonthlyDiscount", field: "monthlyDiscountPercentage", width: 80, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
     ]
   },
   {
     title: "1",
     titleFormatter: menuTitleFormatter,
-    titleDownload: '1',
     headerClick: function (e, column) {
       storage.set("selectedDateRangeId", column.getDefinition().title);
     }, 
@@ -115,7 +106,6 @@ const columnsData: ColumnDefinition[] = [
   {
     title: "2",
     titleFormatter: menuTitleFormatter,
-    titleDownload: '2',
     headerClick: function (e, column) {
       storage.set("selectedDateRangeId", column.getDefinition().title);
     }, 
