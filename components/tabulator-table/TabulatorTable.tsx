@@ -205,14 +205,16 @@ function convertArrayToString(arr: any[]) {
 }
 
 
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms) => {
+  return new Promise(resolve => setTimeout(resolve, ms));
+};
 
 const processVehicle = async (vehicles) => {
   const vehicleToProcess = vehicles?.find(vehicle => vehicle.createdAt === undefined);
   if (!vehicleToProcess) {
     console.log('No vehicles to process');
     return false;
-  };
+  }
   // fetching Turo for raw data
   const vehicleDetails = await fetchVehicle(vehicleToProcess.id);
   let vehicleDailyPricing = await fetchDailyPricing(vehicleToProcess.id);
@@ -224,10 +226,11 @@ const processVehicle = async (vehicles) => {
   // count quantities to show in progress bar
   const qtyEnriched = vehicles.reduce((acc, v) => (v.createdAt !== undefined ? acc + 1 : acc), 0);
   const qtyTotal = vehicles.length;
+  await delay(300 + Math.random() * 1000);
   // save data to storage
   await storage.set("qtyAll", (qtyEnriched + "/" + qtyTotal))
   await storageLocal.set('vehicles', vehicles);
-  await delay(1000);
+  
   return true;
 };
 const addProcessedDataToVehicle = async (vehicle, vehicleDetails, vehicleDailyPricing, marketValue) => {
