@@ -84,7 +84,7 @@ const TurrexButton = () => {
       <React.Fragment>
         <TurrexMainButton id="goodzillo-button" sx={{ mr: 2 }} onClick={handleButtonClick}>
           <Typography sx={{ fontWeight: 700, fontFamily:font  }}>
-            Turrex Explorer
+            Raptor Explorer
           </Typography>
         </TurrexMainButton>
       </React.Fragment>
