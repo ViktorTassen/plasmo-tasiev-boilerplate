@@ -1,8 +1,8 @@
 {
-  "name": "turrex-explorer",
-  "displayName": "Turrex Explorer - Turo Analytics",
-  "version": "2.0",
-  "description": "Turrex Explorer is a browser extension for Turo Hosts. Do your own Turo market research, gain insights and make smarter decisions.",
+  "name": "raptor-explorer",
+  "displayName": "Raptor Explorer - Car Rental Analytics",
+  "version": "2.2",
+  "description": "Do your own car rental market research, gain insights and make smarter decisions.",
   "author": "teamturrex@gmail.com",
   "scripts": {
     "dev": "plasmo dev",
@@ -22,7 +22,8 @@
     "date-fns": "^2.30.0",
     "firebase": "^10.5.2",
     "luxon": "^3.4.3",
-    "plasmo": "^0.84.0",
+    "openai": "^4.51.0",
+    "plasmo": "^0.87.1",
     "react": "18.2.0",
     "react-date-range": "^1.4.0",
     "react-dom": "18.2.0",
@@ -47,7 +48,8 @@
   "manifest": {
     "key": "$CRX_PUBLIC_KEY",
     "host_permissions": [
-      "https://*/*"
+      "https://turo.com/*",
+      "https://www.turo.com/*"
     ],
     "permissions": [
       "identity"

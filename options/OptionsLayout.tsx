@@ -21,8 +21,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           }}
         >
           <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-            <img src={logo} alt="Turrex Logo" style={{ height: '25px' }} />
-            <Typography variant="body1">Turrex Explorer</Typography>
+            <img src={logo} alt="Raptor Logo" style={{ height: '25px' }} />
+            <Typography variant="body1">Raptor Explorer</Typography>
           </Stack>
           {user && (
             <Button

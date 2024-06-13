@@ -141,7 +141,7 @@ const TurrexModalButtons = () => {
             {/* Header and close button */}
             <Stack direction="row" spacing={2}>
                 <img src={iconCropped} style={{ width: '33px', marginLeft: 10 }} />
-                <Typography sx={{ fontWeight: 700, fontFamily:font }}> Turrex Explorer 2.0 </Typography>
+                <Typography sx={{ fontWeight: 700, fontFamily:font }}> Raptor Explorer 3.0 </Typography>
             </Stack>
             <CloseButton onClick={handleClose}>
                 <Close />
@@ -230,7 +230,7 @@ const TurrexModalButtons = () => {
                 )}
 
                 <Typography sx={{fontFamily:font}}>
-                    Check the <a id="info" href="https://turrex.com/instructions" target="_blank" rel="noreferrer">instructions</a> on how to use the extension.
+                    Check the <a id="info" href="https://raptorexplorer.com/instructions" target="_blank" rel="noreferrer">instructions</a> on how to use the extension.
                 </Typography>
             </Box>
         </Box >

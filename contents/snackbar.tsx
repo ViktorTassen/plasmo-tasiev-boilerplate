@@ -70,7 +70,7 @@ const MySnackbar = () => {
             },
             
           }}>
-          <Typography sx={{fontFamily:font}}><b>{openSnack.quantity}</b> unique vehicles added to Turrex</Typography>
+          <Typography sx={{fontFamily:font}}><b>{openSnack.quantity}</b> unique vehicles added to Raptor</Typography>
         </Alert>
       </Snackbar>
     </CacheProvider>

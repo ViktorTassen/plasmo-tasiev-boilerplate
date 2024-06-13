@@ -42,8 +42,8 @@ export default function LoginPage() {
                 </Button>
                 <Typography variant="body2">
                     By signing up, you acknowledge that you have read and understood, and agree to{' '}
-                    <Link href="https://turrex.com/terms">Turrex’s Terms</Link> and{' '}
-                    <Link href="https://turrex.com/privacy">Privacy Policy</Link>.
+                    <Link href="https://raptorexplorer.com/terms">Raptor Explorer Terms</Link> and{' '}
+                    <Link href="https://raptorexplorer.com/privacy">Privacy Policy</Link>.
                 </Typography>
             </Paper>
         </Box>

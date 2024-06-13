@@ -7,6 +7,8 @@ import { useStorage } from "@plasmohq/storage/hook";
 import { Storage } from "@plasmohq/storage";
 import columns from "./columnsData";
 
+// import { getPricefromGPT } from "~utils/gpt";
+
 declare global {
   interface Window {
     XLSX: any;
@@ -49,7 +51,7 @@ function TabulatorTable() {
         columns.find(column => column.title === '2').titleDownload = getDateRangeString(dateRange2);
       }
       tableRef.current.setColumns(columns);
-      tableRef.current.download('xlsx', "Turrex-Data.xlsx");
+      tableRef.current.download('xlsx', "Raptor-Turrex-Data.xlsx");
       setDownload(false);
     }
   }, [download, dateRange1, dateRange2]);
@@ -220,13 +222,17 @@ const processVehicle = async (vehicles) => {
   let vehicleDailyPricing = await fetchDailyPricing(vehicleToProcess.id);
   vehicleDailyPricing = await removeUnusedDataFromDailyPricing(vehicleDailyPricing);
   // fetching 3d party
-  const marketValue = await fetchMarketValue(vehicleDetails.vehicle.vin);
+
+  // const marketValue = await fetchMarketValue(vehicleDetails);
+  const marketValue = null;
+  // let marketValue = await getPricefromGPT(vehicleDetails.vehicle.year, vehicleDetails.vehicle.make, vehicleDetails.vehicle.model, vehicleDetails.vehicle.trim);
+
   // final step to process raw data and add it to vehicle object for display it table
   await addProcessedDataToVehicle(vehicleToProcess, vehicleDetails, vehicleDailyPricing, marketValue);
   // count quantities to show in progress bar
   const qtyEnriched = vehicles.reduce((acc, v) => (v.createdAt !== undefined ? acc + 1 : acc), 0);
   const qtyTotal = vehicles.length;
-  await delay(300 + Math.random() * 1000);
+  await delay(300 + Math.random() * 1200);
   // save data to storage
   await storage.set("qtyAll", (qtyEnriched + "/" + qtyTotal))
   await storageLocal.set('vehicles', vehicles);
@@ -234,10 +240,7 @@ const processVehicle = async (vehicles) => {
   return true;
 };
 const addProcessedDataToVehicle = async (vehicle, vehicleDetails, vehicleDailyPricing, marketValue) => {
-  // const result30 = calculateBusyDaysAndIncome(vehicleDailyPricing, 30, 'past');
-  // const result90 = calculateBusyDaysAndIncome(vehicleDailyPricing, 90, 'past');
   const result365 = calculateBusyDaysAndIncome(vehicleDailyPricing, 365, 'past');
-  // const resultFuture30 = calculateBusyDaysAndIncome(vehicleDailyPricing, 30, 'future');
 
   // Add vehicleDetails data
   vehicle.address = vehicle.location.city + ', ' + vehicle.location.state;
@@ -275,14 +278,15 @@ const addProcessedDataToVehicle = async (vehicle, vehicleDetails, vehicleDailyPr
   vehicle.totalEarned365 = result365.income;
   // vehicle.totalEarnedFuture30 = resultFuture30.income;
 
-  // Add marketValue data
-  if (marketValue?.prices?.below && marketValue?.prices?.average) {
-    vehicle.marketValue = ((4 * marketValue?.prices.below + marketValue?.prices.average) / 5).toFixed(0);
-  }
+  vehicle.marketValue = marketValue
+  // // Add marketValue data
+  // if (marketValue?.prices?.below && marketValue?.prices?.average) {
+  //   vehicle.marketValue = ((4 * marketValue?.prices.below + marketValue?.prices.average) / 5).toFixed(0);
+  // }
 
-  if (vehicle.marketValue === 'NaN') {
-    vehicle.marketValue = '';
-  }
+  // if (vehicle.marketValue === 'NaN') {
+  //   vehicle.marketValue = '';
+  // }
 
   // Calculate additional fields
   vehicle.averagePrice = (vehicle.totalEarned365 / vehicle.busy365).toFixed(0);
@@ -347,24 +351,56 @@ const fetchDailyPricing = async (vehicleId: any) => {
     console.error(error);
   };
 };
-const fetchMarketValue = async (vehicleVIN: any) => {
-  try {
-    const response = await fetch(`https://marketvalue.vinaudit.com/getmarketvalue.php?key=1HB7ICF9L0GVH5Q&vin=${vehicleVIN}&period=182&mileage=null&country=USA`, {
-      signal: AbortSignal.timeout(1000),
-      method: "GET",
-    });
-    if (response.ok) {
-      const data = await response.json();
-      // console.log('fetchMarketValue', data);
-      return data;
-    } else {
-      console.error("Response is not OK. Status: " + response.status);
-    }
-  } catch (error) {
-    console.error(error);
+const fetchMarketValue = async (vehicle) => {
+  let make = replaceSpacesWithHyp(vehicle.vehicle.make);
+  if (make.includes('Mercedes')) {
+    console.log("make.includes('Mercedes')")
+    make = 'mercedesbenz';
   };
 
+  let model = replaceSpacesWithHyp(vehicle.vehicle.model);
+  let trim = replaceSpacesWithHyp(vehicle.vehicle.trim);
+  let year = vehicle.vehicle.year;
+  if (year == DateTime.now().year) {
+    year = year - 1;
+  }
+
+  // Helper function to make the fetch request
+  const makeRequest = async (make, model, year) => {
+    try {
+      const response = await fetch(`https://marketvalues.vinaudit.com/getmarketvalue.php?key=1HB7ICF9L0GVH5Q&id=${year}_${make}_${model}`, {
+        signal: AbortSignal.timeout(3000),
+        method: "GET",
+      });
+      if (response.ok) {
+        const data = await response.json();
+        console.log('fetchMarketValue', data);
+        return data;
+      } else {
+        console.error("Response is not OK. Status: " + response.status);
+        return { success: false };
+      }
+    } catch (error) {
+      console.error(error);
+      return { success: false };
+    }
+  };
+
+  // First request
+  let data = await makeRequest(make, model, year);
+
+  // If first request fails, modify model and try again
+  if (!data.success) {
+    const modifiedModel = vehicle.vehicle.model.replace(/\s|-/g, '');
+    console.log('Modified model:', modifiedModel);
+    data = await makeRequest(make, modifiedModel, year);
+  }
+
+
+
+  return data;
 };
+
 
 const removeUnusedDataFromDailyPricing = async (data) => {
   data = data.filter(item => item.wholeDayUnavailable);
@@ -447,4 +483,10 @@ function dateStringConversion(dateString) {
   dateObject.setHours(10, 0, 0, 0);
 
   return dateObject
+}
+
+
+function replaceSpacesWithHyp(string) {
+  if (!string) return;
+  return string.replace(/\s/g, '-');
 }

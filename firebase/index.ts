@@ -113,7 +113,7 @@ export async function getLinkToCustomerPortal(user: any, setIsManaging) {
   await createPortalLink({
       // get current browser URL
       // returnUrl: "chrome-extension://ledkinjhgknjnbkibicjgaemihkealfg/options.html" // not working
-      returnUrl: "https://turrex.com" // can set this to a custom page
+      returnUrl: "https://raptorexplorer.com" // can set this to a custom page
   }).then((result: any) => {
       // open new tab with Stripe portal link
       window.open(result.data.url, '_blank');

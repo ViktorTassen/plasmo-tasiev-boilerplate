@@ -13,7 +13,7 @@ PLASMO_PUBLIC_FIREBASE_MEASUREMENT_ID=G-1234567
 PLASMO_PUBLIC_STRIPE_LINK=https://buy.stripe.com/4gw2bgetD9j2ewE5kk
 PLASMO_PUBLIC_STRIPE_PRICE_ID=price_1N9ZQaL5pL8dc9xK0WXXEKY9
 
-PLASMO_PUBLIC_STRIPE_SUCCESS_URL=https://turrex.com/success.html
-PLASMO_PUBLIC_STRIPE_CANCEL_URL=https://turrex.com
-PLASMO_PUBLIC_RETURN_URL=https://turrex.com
+PLASMO_PUBLIC_STRIPE_SUCCESS_URL=https://raptorexplorer.com/success.html
+PLASMO_PUBLIC_STRIPE_CANCEL_URL=https://raptorexplorer.com
+PLASMO_PUBLIC_RETURN_URL=https://raptorexplorer.com
 

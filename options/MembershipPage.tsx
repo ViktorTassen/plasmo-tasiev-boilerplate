@@ -157,7 +157,7 @@ export default function MembershipPage(props: MembershipPageProps) {
                         display: 'flex',
                         justifyContent: 'space-between',
                     }}
-                    href="https://turrex.com/instructions"
+                    href="https://raptorexplorer.com/instructions"
                     target="_blank"
                 >
                     <Stack>

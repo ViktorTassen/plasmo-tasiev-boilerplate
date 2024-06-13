@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
-import type { PlasmoCSConfig, PlasmoGetInlineAnchor, PlasmoMountShadowHost } from "plasmo"
+import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from "plasmo"
 import { useStorage } from "@plasmohq/storage/hook"
-import { Storage } from "@plasmohq/storage"
 
 export const config: PlasmoCSConfig = {
   matches: ["https://turo.com/*/search*"],
@@ -13,13 +12,20 @@ import { CacheProvider } from "@emotion/react";
 import { styled, Button, Typography} from "@mui/material";
 import { checkLicense } from "~firebase";
 
-export const getInlineAnchor: PlasmoGetInlineAnchor = async () => {
-  if (document.querySelector(`.desktopMoreFilters`)) {
-    return document.querySelector(`.desktopMoreFilters`)
-  } else {
-    return document.querySelector(`.searchFilter`)
-  };
-};
+export const getInlineAnchor: PlasmoGetInlineAnchor = () => ({
+  element: document.querySelector('.searchFilter'),
+  insertPosition: "beforebegin",
+});
+
+
+// export const getInlineAnchor: PlasmoGetInlineAnchor = async () => {
+
+//   if (document.querySelector(`.filter-buttons`)) {
+//     return document.querySelector(`.filter-buttons`)
+//   } else {
+//     return document.querySelector(`.searchFilter`)
+//   };
+// };
 
 
 
@@ -76,7 +82,7 @@ const TurrexButton = () => {
   return (
     <CacheProvider value={styleCache}>
       <React.Fragment>
-        <TurrexMainButton sx={{ mr: 2 }} onClick={handleButtonClick}>
+        <TurrexMainButton id="goodzillo-button" sx={{ mr: 2 }} onClick={handleButtonClick}>
           <Typography sx={{ fontWeight: 700, fontFamily:font  }}>
             Turrex Explorer
           </Typography>
