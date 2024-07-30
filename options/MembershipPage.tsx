@@ -128,7 +128,7 @@ export default function MembershipPage(props: MembershipPageProps) {
             )}
             <Box sx={{ mt: 2, textAlign: "center" }}>
                 <Typography variant="body2">Email support: {' '}
-                    <Typography variant="body2" component="a" href="mailto:teamturrex@gmail.com">teamturrex@gmail.com</Typography>
+                    <Typography variant="body2" component="a" href="mailto:support@raptorexplorer.com">support@raptorexplorer.com</Typography>
                 </Typography>
             </Box>
         </Paper>

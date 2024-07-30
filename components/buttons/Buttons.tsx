@@ -141,7 +141,7 @@ const TurrexModalButtons = () => {
             {/* Header and close button */}
             <Stack direction="row" spacing={2}>
                 <img src={iconCropped} style={{ width: '33px', marginLeft: 10 }} />
-                <Typography sx={{ fontWeight: 700, fontFamily:font }}> Raptor Explorer 3.0 </Typography>
+                <Typography sx={{ fontWeight: 700, fontFamily:font }}> Raptor Explorer</Typography>
             </Stack>
             <CloseButton onClick={handleClose}>
                 <Close />
@@ -217,7 +217,7 @@ const TurrexModalButtons = () => {
                         <a href='' id="login-link" target="_blank" onClick={handleLoginClick} rel="noreferrer">
                             Sign in with Google
                         </a>{' '}
-                        to start using the Turrex Explorer.
+                        to start using the Raptor Explorer.
                     </Typography>
                 )}
 

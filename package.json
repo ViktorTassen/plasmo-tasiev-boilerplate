@@ -3,7 +3,7 @@
   "displayName": "Raptor Explorer - Car Rental Analytics",
   "version": "2.2",
   "description": "Do your own car rental market research, gain insights and make smarter decisions.",
-  "author": "teamturrex@gmail.com",
+  "author": "support@raptorexplorer.com",
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build",
