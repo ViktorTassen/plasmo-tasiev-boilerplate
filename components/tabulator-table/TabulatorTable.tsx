@@ -6,8 +6,8 @@ import XLSX from 'xlsx/dist/xlsx.full.min.js';
 import { useStorage } from "@plasmohq/storage/hook";
 import { Storage } from "@plasmohq/storage";
 import columns from "./columnsData";
-
-// import { getPricefromGPT } from "~utils/gpt";
+import { sendToBackground } from "@plasmohq/messaging"
+import { updateApiCounter } from "~firebase";
 
 declare global {
   interface Window {
@@ -26,76 +26,49 @@ function TabulatorTable() {
   let tableRef = useRef(null);
   const [tableData, setTableData] = useStorage({
     key: "vehicles", instance: storageLocal
-  }) // get vehicles from local storage
-
-  const [license, setLicense] = useStorage("license")
-  const [loading, setLoading] = useState(true)
-  const [download, setDownload] = useStorage("download")
-  const [isEnriching, setIsEnriching] = useStorage("isEnriching")
-  const [col, setCol] = useState(columns)
-  const [filters, setFilters] = useStorage("filters")
-  const [filtersListener, setFiltersListener] = useState(false)
-
-  const [dateRange1] = useStorage("1")
-  const [dateRange2] = useStorage("2")
-
-  // // next update
-  // const [selectedCar, setSelectedCar] = useStorage("selectedCar")
-
-  useEffect(() => {
-    if (tableRef.current && download === true) {
-      if (dateRange1) {
-        columns.find(column => column.title === '1').titleDownload = getDateRangeString(dateRange1);
-      }
-      if (dateRange2) {
-        columns.find(column => column.title === '2').titleDownload = getDateRangeString(dateRange2);
-      }
-      tableRef.current.setColumns(columns);
-      tableRef.current.download('xlsx', "Raptor-Turrex-Data.xlsx");
-      setDownload(false);
-    }
-  }, [download, dateRange1, dateRange2]);
-
-
- useEffect(() => {
-    if (tableRef.current && tableData && license) {
-      const data = modifyData(tableData, dateRange1, dateRange2).slice(0, license.license ? undefined : 5);
-      tableRef.current.replaceData(data);
-      setLoading(false);
-    }
-  }, [tableData, license, dateRange1, dateRange2]);
-
-
-  useEffect(() => {
-    const enrichTableData = async () => {
-      if (isEnriching) {
-        try {
-          const result = await processVehicle(tableData.slice(0, license.license ? undefined : 5));
-          if (!result) {
-            setIsEnriching(false);
-          }
-        } catch (error) {
-          console.error('Error processing vehicle:', error);
-          setIsEnriching(false);
-        }
-      }
-    };
-
-    enrichTableData();
-  }, [tableData, isEnriching, license]);
-
+  });
+  const [license, setLicense] = useStorage("license");
+  const [uid] = useStorage("firebaseUid");
+  const [loading, setLoading] = useState(true);
+  const [download, setDownload] = useStorage("download");
+  const [isEnriching, setIsEnriching] = useStorage("isEnriching");
+  const [col, setCol] = useState(columns);
+  const [filters, setFilters] = useStorage("filters");
+  const [filtersListener, setFiltersListener] = useState(false);
+  const [dateRange1] = useStorage("1");
+  const [dateRange2] = useStorage("2");
 
   useEffect(() => {
     if (tableRef.current) {
+      // Handle download logic
+      if (download === true) {
+        if (dateRange1) {
+          columns.find(column => column.title === '1').titleDownload = getDateRangeString(dateRange1);
+        }
+        if (dateRange2) {
+          columns.find(column => column.title === '2').titleDownload = getDateRangeString(dateRange2);
+        }
+        tableRef.current.setColumns(columns);
+        tableRef.current.download('xlsx', "Raptor-Turrex-Data.xlsx");
+        setDownload(false);
+      }
 
+      // Update table data
+      if (tableData && license) {
+        const data = modifyData(tableData, dateRange1, dateRange2).slice(0, license.license ? undefined : 5);
+        tableRef.current.replaceData(data);
+        setLoading(false);
+      }
+
+      // Set filters if they exist
       if (!filtersListener) {
-      setFiltersListener(true);
+        setFiltersListener(true);
         tableRef.current.on("dataFiltered", (headerFilters, rows) => {
-          if (JSON.stringify(headerFilters) != JSON.stringify(filters)) {
-          setFilters(headerFilters);
+          if (JSON.stringify(headerFilters) !== JSON.stringify(filters)) {
+            setFilters(headerFilters);
           }
         });
-      };
+      }
 
       filters?.forEach(filter => {
         if (filter.type === "like") {
@@ -111,8 +84,27 @@ function TabulatorTable() {
         }
       });
     }
-  }, [filters]);
+  }, [tableData, license, download, dateRange1, dateRange2, filters, filtersListener]);
 
+  useEffect(() => {
+    const enrichTableData = async () => {
+      if (isEnriching) {
+        try {
+          const result = await processVehicles(tableData.slice(0, license.license ? undefined : 5), uid);
+          if (!result) {
+            setIsEnriching(false);
+          } else {
+            setIsEnriching(false);
+          }
+        } catch (error) {
+          console.error('Error processing vehicles:', error);
+          setIsEnriching(false);
+        }
+      }
+    };
+
+    enrichTableData();
+  }, [tableData, isEnriching, license]);
 
   useEffect(() => {
     const dateRanges = [
@@ -127,13 +119,7 @@ function TabulatorTable() {
         }
       });
     }
-  }, [download, dateRange1, dateRange2]);
-
-
-  // // next update
-  // const rowClick = (e, row) => {
-  //   setSelectedCar(row.getData().id);
-  // };
+  }, [dateRange1, dateRange2]);
 
   const options = {
     downloadDataFormatter: (data) => data,
@@ -141,7 +127,7 @@ function TabulatorTable() {
   };
 
   const downloadConfig = {
-    columnGroups: true
+    columnGroups: true,
   };
 
   return (
@@ -154,265 +140,114 @@ function TabulatorTable() {
         height="75vh"
         downloadConfig={downloadConfig}
         options={options}
-
-      // // next update
-      // selectable="1"
-      // events={{
-      //   rowClick: rowClick
-      // }}
       />
     </React.Fragment>
-  )
+  );
 }
+
 
 export default TabulatorTable;
 
 
-// functions
-function calculateBusyDaysAndIncome(data, days, direction) {
-  // console.log('calculateBusyDaysAndIncome', data)
-  let endDate;
-  let startDate;
-
-  if (direction == 'future') {
-    endDate = DateTime.now().plus({ days: days }).toFormat('MM/dd/yyyy');
-    startDate = DateTime.now().toFormat('MM/dd/yyyy');
-  } else {
-    endDate = DateTime.now().toFormat('MM/dd/yyyy');
-    startDate = DateTime.now().minus({ days: days }).toFormat('MM/dd/yyyy');
-  }
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-
-  // Filter the objects based on the date range
-  const filteredDates = data.filter(obj => {
-    const objDate = new Date(obj.date);
-    return objDate >= start && objDate <= end;
-  });
-
-  let daysUnavailable = 0;
-  let totalEarned = 0;
-
-  filteredDates.forEach(day => {
-    daysUnavailable++;
-    totalEarned += day.price;
-    // calculate average price
-  });
-
-  return { days: daysUnavailable, income: totalEarned };
-};
-function convertArrayToString(arr: any[]) {
-  const labels = arr.map(item => item.label);
-  return labels.join(", ");
-}
 
 
-const delay = (ms) => {
-  return new Promise(resolve => setTimeout(resolve, ms));
-};
-
-const processVehicle = async (vehicles) => {
-  const vehicleToProcess = vehicles?.find(vehicle => vehicle.createdAt === undefined);
-  if (!vehicleToProcess) {
+const processVehicles = async (vehicles ,uid) => {
+  const vehiclesToProcess = vehicles.filter(vehicle => vehicle.createdAt === undefined);
+  if (vehiclesToProcess.length === 0) {
     console.log('No vehicles to process');
     return false;
   }
-  // fetching Turo for raw data
-  const vehicleDetails = await fetchVehicle(vehicleToProcess.id);
-  let vehicleDailyPricing = await fetchDailyPricing(vehicleToProcess.id);
-  vehicleDailyPricing = await removeUnusedDataFromDailyPricing(vehicleDailyPricing);
-  // fetching 3d party
 
-  // const marketValue = await fetchMarketValue(vehicleDetails);
-  const marketValue = null;
-  // let marketValue = await getPricefromGPT(vehicleDetails.vehicle.year, vehicleDetails.vehicle.make, vehicleDetails.vehicle.model, vehicleDetails.vehicle.trim);
+  console.log('Vehicles to process:', vehiclesToProcess);
 
-  // final step to process raw data and add it to vehicle object for display it table
-  await addProcessedDataToVehicle(vehicleToProcess, vehicleDetails, vehicleDailyPricing, marketValue);
-  // count quantities to show in progress bar
-  const qtyEnriched = vehicles.reduce((acc, v) => (v.createdAt !== undefined ? acc + 1 : acc), 0);
-  const qtyTotal = vehicles.length;
-  await delay(300 + Math.random() * 1200);
-  // save data to storage
-  await storage.set("qtyAll", (qtyEnriched + "/" + qtyTotal))
-  await storageLocal.set('vehicles', vehicles);
-  
-  return true;
-};
-const addProcessedDataToVehicle = async (vehicle, vehicleDetails, vehicleDailyPricing, marketValue) => {
-  const result365 = calculateBusyDaysAndIncome(vehicleDailyPricing, 365, 'past');
-
-  // Add vehicleDetails data
-  vehicle.address = vehicle.location.city + ', ' + vehicle.location.state;
-  vehicle.color = vehicleDetails.color;
-  vehicle.trim = vehicleDetails.vehicle.trim;
-  vehicle.vin = vehicleDetails.vehicle.vin;
-  vehicle.features = convertArrayToString(vehicleDetails.badges);
-  vehicle.numberOfFavorites = vehicleDetails.numberOfFavorites;
-  vehicle.numberOfReviews = vehicleDetails.numberOfReviews;
-  vehicle.ratings = vehicleDetails.ratings.ratingToHundredth;
-  vehicle.url = vehicleDetails.vehicle.url;
-  vehicle.createdAt = new Date(vehicleDetails.vehicle.listingCreatedTime).toLocaleDateString();
-  vehicle.daysOn = ((Date.now() - vehicleDetails.vehicle.listingCreatedTime) / (1000 * 3600 * 24)).toFixed(0);
-  vehicle.plan = vehicleDetails.currentVehicleProtection.displayName;
-
-  if (vehicleDetails.rate.dailyDistance.scalar) {
-    vehicle.dailyDistance = vehicleDetails.rate.dailyDistance.scalar;
-  } else {
-    vehicle.dailyDistance = 999;
-  }
-  
-  vehicle.weeklyDiscountPercentage = vehicleDetails.rate.weeklyDiscountPercentage;
-  vehicle.monthlyDiscountPercentage = vehicleDetails.rate.monthlyDiscountPercentage;
+  let enrichedCount = 0;
 
   
-  // add vehicleDailyPricing data to vehicle object
-  vehicle.vehicleDailyPricing = vehicleDailyPricing;
-  // Add vehicleDailyPricing data
-  // vehicle.busy30 = result30.days;
-  // vehicle.busy90 = result90.days;
-  vehicle.busy365 = result365.days;
-  // vehicle.busyFuture30 = resultFuture30.days;
-  // vehicle.totalEarned30 = result30.income;
-  // vehicle.totalEarned90 = result90.income;
-  vehicle.totalEarned365 = result365.income;
-  // vehicle.totalEarnedFuture30 = resultFuture30.income;
+  await updateApiCounter(uid, vehiclesToProcess.length);
 
-  vehicle.marketValue = marketValue
-  // // Add marketValue data
-  // if (marketValue?.prices?.below && marketValue?.prices?.average) {
-  //   vehicle.marketValue = ((4 * marketValue?.prices.below + marketValue?.prices.average) / 5).toFixed(0);
-  // }
+  // Helper function to introduce a delay
+  const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-  // if (vehicle.marketValue === 'NaN') {
-  //   vehicle.marketValue = '';
-  // }
+  // Processing vehicles in batches
+  const batchSize = 100; // Number of vehicles to process concurrently in each batch
+  for (let i = 0; i < vehiclesToProcess.length; i += batchSize) {
+    const batch = vehiclesToProcess.slice(i, i + batchSize);
 
-  // Calculate additional fields
-  vehicle.averagePrice = (vehicle.totalEarned365 / vehicle.busy365).toFixed(0);
-  if (vehicle.averagePrice === 'NaN') {
-    vehicle.averagePrice = '';
-  }
+    // Create promises for the current batch
+    const promises = batch.map(async (vehicleToProcess) => {
+      try {
+        const resp = await sendToBackground({
+          name: "brightData",
+          body: {
+            targetVehicleUrl: "https://turo.com/api/vehicle/detail?vehicleId=" + vehicleToProcess.id,
+            targetDailyPricingUrl: createDailyPricingUrl(vehicleToProcess.id)
+          }
+        });
 
-  vehicle.tripDayRatio = ((vehicle.completedTrips / vehicle.daysOn).toFixed(2));
-  if (vehicle.tripDayRatio === 'NaN') {
-    vehicle.tripDayRatio = '';
-  }
-};
+        if (resp !== false) {
+          // Update the vehicle with the new data
+          const vehicle = resp;
+          const existingVehicle = vehicles.find(v => v.id === vehicle.id);
 
+          if (existingVehicle) {
+            console.log('existingVehicle', existingVehicle);
+            // Update the existing vehicle by copying properties from the new vehicle
+            Object.assign(existingVehicle, vehicle);
+          } else {
+            // Add a new vehicle
+            vehicles.push(vehicle);
+          }
 
+          // Increment enriched count
+          enrichedCount++;
+        } else {
+          console.error('Failed to fetch data for vehicle:', vehicleToProcess.id);
+        }
 
+        // Update progress after each vehicle is processed
+        const qtyTotal = vehicles.length;
+        storage.set("qtyAll", `${enrichedCount}/${qtyTotal}`);
 
-const fetchVehicle = async (vehicleId: any) => {
-  try {
-    const response = await fetch("https://turo.com/api/vehicle/detail?vehicleId=" + vehicleId, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      mode: "cors",
-      credentials: "include",
+      } catch (error) {
+        console.error('Error processing vehicle:', vehicleToProcess.id, error);
+      }
     });
 
-    if (response.ok) {
-      const data = await response.json();
-      // console.log('fetchVehicle', data);
-      return data;
-    } else {
-      console.error("Response is not OK. Status: " + response.status);
+    // Wait for all promises in the batch to complete
+    await Promise.all(promises);
+
+    // Introduce a delay between batches
+    if (i + batchSize < vehiclesToProcess.length) {
+      await delay(1000); // 1-second delay between batches
     }
-  } catch (error) {
-    console.error(error);
   }
+
+  // Save the updated vehicles list back to storage
+  await storageLocal.set("vehicles", vehicles);
+
+  // Final count and update
+  const qtyEnriched = vehicles.reduce((acc, v) => (v.createdAt !== undefined ? acc + 1 : acc), 0);
+  const qtyTotal = vehicles.length;
+  storage.set("qtyAll", `${qtyEnriched}/${qtyTotal}`);
+
+  return true;
 };
-const fetchDailyPricing = async (vehicleId: any) => {
+
+
+
+
+
+
+const createDailyPricingUrl = (vehicleId) => {
   let endDate = DateTime.now().plus({ month: 1 }).toFormat('MM/dd/yyyy');
   let startDate = DateTime.now().minus({ year: 1 }).toFormat('MM/dd/yyyy');
   let endDateEncoded = encodeURIComponent(endDate.toString());
   let startDateEncoded = encodeURIComponent(startDate.toString());
-
-  try {
-    const response = await fetch(`https://turo.com/api/vehicle/daily_pricing?end=${endDateEncoded}&start=${startDateEncoded}&vehicleId=${vehicleId}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      mode: "cors",
-      credentials: "include",
-    });
-    if (response.ok) {
-      const data = await response.json();
-      // console.log('fetchDailyPricing', data);
-      return data.dailyPricingResponses;
-    } else {
-      console.error("Response is not OK. Status: " + response.status);
-    }
-  } catch (error) {
-    console.error(error);
-  };
-};
-const fetchMarketValue = async (vehicle) => {
-  let make = replaceSpacesWithHyp(vehicle.vehicle.make);
-  if (make.includes('Mercedes')) {
-    console.log("make.includes('Mercedes')")
-    make = 'mercedesbenz';
-  };
-
-  let model = replaceSpacesWithHyp(vehicle.vehicle.model);
-  let trim = replaceSpacesWithHyp(vehicle.vehicle.trim);
-  let year = vehicle.vehicle.year;
-  if (year == DateTime.now().year) {
-    year = year - 1;
-  }
-
-  // Helper function to make the fetch request
-  const makeRequest = async (make, model, year) => {
-    try {
-      const response = await fetch(`https://marketvalues.vinaudit.com/getmarketvalue.php?key=1HB7ICF9L0GVH5Q&id=${year}_${make}_${model}`, {
-        signal: AbortSignal.timeout(3000),
-        method: "GET",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        console.log('fetchMarketValue', data);
-        return data;
-      } else {
-        console.error("Response is not OK. Status: " + response.status);
-        return { success: false };
-      }
-    } catch (error) {
-      console.error(error);
-      return { success: false };
-    }
-  };
-
-  // First request
-  let data = await makeRequest(make, model, year);
-
-  // If first request fails, modify model and try again
-  if (!data.success) {
-    const modifiedModel = vehicle.vehicle.model.replace(/\s|-/g, '');
-    console.log('Modified model:', modifiedModel);
-    data = await makeRequest(make, modifiedModel, year);
-  }
-
-
-
-  return data;
-};
-
-
-const removeUnusedDataFromDailyPricing = async (data) => {
-  data = data.filter(item => item.wholeDayUnavailable);
-  data = data.map(item => {
-    const filteredItem = {
-      date: item.date,
-      price: item.price,
-    }
-    return filteredItem;
-  });
-  return data;
+  return `https://turo.com/api/vehicle/daily_pricing?end=${endDateEncoded}&start=${startDateEncoded}&vehicleId=${vehicleId}`;
 }
+
+
+
 const updateDateRangeElement = (dateRange, dateRangeElement) => {
   if (dateRange) {
     const startDate = DateTime.fromISO(dateRange[0].startDate).toFormat('MMM d, yyyy');
@@ -444,6 +279,7 @@ function loopVehiclesApplyDateRange(data, range, id) {
   if (!data) return;
   data.forEach(vehicle => {
     const result = filterArrayUsingDateRange(vehicle.vehicleDailyPricing, range);
+
     // Modify the original vehicle object
     if (result) {
       vehicle['busy' + id] = result.days;

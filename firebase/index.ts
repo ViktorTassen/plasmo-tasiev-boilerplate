@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app"
 import { getAuth } from "firebase/auth"
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, setDoc, updateDoc } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { collection, getDocs, doc, getDoc, addDoc, onSnapshot, query, where } from "firebase/firestore";
 
@@ -103,6 +103,34 @@ export async function checkLicense(uid) {
 
   };
 };
+
+
+export async function updateApiCounter(uid, incrementValue) {
+  try {
+    const counterDocRef = doc(db, 'customers', uid);
+
+    if (!counterDocRef) {
+      return;
+    }
+
+    const counterDoc = await getDoc(counterDocRef);
+
+    if (counterDoc.exists()) {
+      // Increment existing value by incrementValue
+      const currentValue = counterDoc.data().api_counter || 0;
+      await updateDoc(counterDocRef, {
+        api_counter: currentValue + incrementValue
+      });
+    } else {
+      // Set the initial value if it doesn't exist
+      await setDoc(counterDocRef, {
+        api_counter: incrementValue
+      });
+    }
+  } catch (error) {
+    console.log("Error updating API counter: ", error);
+  }
+}
 
 export async function getLinkToCustomerPortal(user: any, setIsManaging) {
   const functions = getFunctions(app, 'us-central1');

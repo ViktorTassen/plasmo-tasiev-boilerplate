@@ -19,8 +19,11 @@
     "@mui/material": "^5.14.14",
     "@plasmohq/messaging": "^0.5.0",
     "@plasmohq/storage": "^1.8.1",
+    "axios": "^1.7.7",
+    "axios-https-proxy-fix": "^0.17.1",
     "date-fns": "^2.30.0",
     "firebase": "^10.5.2",
+    "https-proxy-agent": "^7.0.5",
     "luxon": "^3.4.3",
     "openai": "^4.51.0",
     "plasmo": "^0.87.1",
@@ -49,7 +52,8 @@
     "key": "$CRX_PUBLIC_KEY",
     "host_permissions": [
       "https://turo.com/*",
-      "https://www.turo.com/*"
+      "https://www.turo.com/*",
+      "https://raptor-nodejs-serverless-function.vercel.app/*"
     ],
     "permissions": [
       "identity"

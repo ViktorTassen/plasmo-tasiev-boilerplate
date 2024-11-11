@@ -26,8 +26,6 @@ window.fetch = async function (...args) {
             type: "add"
           }
         })
-        // const listEvent = new CustomEvent('ListToContentPost', { detail: json.vehicles });
-        // document.dispatchEvent(listEvent);
       }
 
       if (json.list) {
@@ -38,12 +36,15 @@ window.fetch = async function (...args) {
             type: "add"
           }
         });
+
         // const listEvent = new CustomEvent('ListToContentPost', { detail: json.list });
         // document.dispatchEvent(listEvent);
       }
 
       return response;
-    } else {
+    } 
+
+    else {
       // Handle other cases or simply return the response
       return response;
     }
