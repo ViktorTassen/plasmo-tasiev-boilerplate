@@ -38,6 +38,10 @@ function TabulatorTable() {
   const [dateRange1] = useStorage("1");
   const [dateRange2] = useStorage("2");
 
+  const [enrichedCount, setEnrichedCount] = useState(0);
+
+
+
   useEffect(() => {
     if (tableRef.current) {
       // Handle download logic
@@ -90,21 +94,129 @@ function TabulatorTable() {
     const enrichTableData = async () => {
       if (isEnriching) {
         try {
-          const result = await processVehicles(tableData.slice(0, license.license ? undefined : 5), uid);
-          if (!result) {
-            setIsEnriching(false);
-          } else {
-            setIsEnriching(false);
-          }
+          await processVehiclesInBatches();
         } catch (error) {
           console.error('Error processing vehicles:', error);
+        } finally {
           setIsEnriching(false);
         }
       }
     };
 
     enrichTableData();
-  }, [tableData, isEnriching, license]);
+  }, [isEnriching]);
+
+
+  const processVehiclesInBatches = async () => {
+    const batchSize = 100;
+    let vehiclesToProcess = tableData.filter(vehicle => vehicle.createdAt === undefined);
+    await updateApiCounter(uid, vehiclesToProcess.length);
+  
+    let enrichedCountLocal = enrichedCount;
+  
+    // Update qtyAll initially and then set an interval to update it every 3 seconds
+    storage.set("qtyAll", `${enrichedCountLocal}/${tableData.length}`);
+    const updateInterval = setInterval(() => {
+      storage.set("qtyAll", `${enrichedCountLocal}/${tableData.length}`);
+    }, 3000);
+  
+    const retryQueue = [];
+  
+    // Process initial batches
+    while (vehiclesToProcess.length > 0 && isEnriching) {
+      if (!isEnriching) {
+        clearInterval(updateInterval);
+        console.log('Enrichment process stopped by user.');
+        break;
+      }
+  
+      const batch = vehiclesToProcess.slice(0, batchSize);
+      vehiclesToProcess = vehiclesToProcess.slice(batchSize);
+  
+      await Promise.all(batch.map(async (vehicle) => {
+        try {
+          await enrichVehicle(vehicle);
+          enrichedCountLocal++;
+          setEnrichedCount(enrichedCountLocal);
+        } catch (error) {
+          console.error(`Error enriching vehicle ${vehicle.id}, adding to retry queue`, error);
+          retryQueue.push(vehicle);
+        }
+      }));
+    }
+  
+    // Retry failed vehicles after initial batches are complete
+    let retryAttempts = 0;
+    const maxRetryAttempts = 3;
+  
+    while (retryQueue.length > 0 && retryAttempts < maxRetryAttempts && isEnriching) {
+      if (!isEnriching) {
+        clearInterval(updateInterval);
+        console.log('Enrichment process stopped by user.');
+        break;
+      }
+  
+      console.log(`Retry attempt ${retryAttempts + 1} for ${retryQueue.length} vehicles.`);
+      const currentRetryQueue = [...retryQueue];
+      retryQueue.length = 0;
+  
+      await Promise.all(currentRetryQueue.map(async (vehicle) => {
+        try {
+          await enrichVehicle(vehicle);
+          enrichedCountLocal++;
+          setEnrichedCount(enrichedCountLocal);
+        } catch (error) {
+          console.error(`Error enriching vehicle ${vehicle.id} on retry attempt ${retryAttempts + 1}`, error);
+          retryQueue.push(vehicle);
+        }
+      }));
+  
+      retryAttempts++;
+    }
+  
+    // Stop the interval and save the final qtyAll value
+    clearInterval(updateInterval);
+    storage.set("qtyAll", `${enrichedCountLocal}/${tableData.length}`);
+  
+    if (retryQueue.length === 0) {
+      console.log('All vehicles enriched successfully.');
+    } else {
+      console.log(`${retryQueue.length} vehicles could not be enriched after ${maxRetryAttempts} retries.`);
+    }
+  
+    // Save the final state of the vehicles to local storage
+    await storageLocal.set("vehicles", tableData);
+  };
+  
+  const enrichVehicle = async (vehicle) => {
+    const maxRetries = 1; // Only one attempt during the initial batch processing
+    let attempt = 0;
+    while (attempt < maxRetries) {
+      try {
+        const resp = await sendToBackground({
+          name: "brightData",
+          body: {
+            targetVehicleUrl: "https://turo.com/api/vehicle/detail?vehicleId=" + vehicle.id,
+            targetDailyPricingUrl: createDailyPricingUrl(vehicle.id)
+          }
+        });
+  
+        if (resp !== false) {
+          Object.assign(vehicle, resp);
+          return;
+        } else {
+          throw new Error(`Failed to fetch data for vehicle: ${vehicle.id}`);
+        }
+      } catch (error) {
+        attempt++;
+        if (attempt >= maxRetries) {
+          throw error;
+        }
+        console.warn(`Retrying vehicle ${vehicle.id}, attempt ${attempt}`);
+      }
+    }
+  };
+  
 
   useEffect(() => {
     const dateRanges = [
@@ -165,8 +277,6 @@ const processVehicles = async (vehicles ,uid) => {
   
   await updateApiCounter(uid, vehiclesToProcess.length);
 
-  // Helper function to introduce a delay
-  const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
   // Processing vehicles in batches
   const batchSize = 100; // Number of vehicles to process concurrently in each batch
@@ -216,10 +326,6 @@ const processVehicles = async (vehicles ,uid) => {
     // Wait for all promises in the batch to complete
     await Promise.all(promises);
 
-    // Introduce a delay between batches
-    if (i + batchSize < vehiclesToProcess.length) {
-      await delay(1000); // 1-second delay between batches
-    }
   }
 
   // Save the updated vehicles list back to storage
@@ -278,7 +384,7 @@ function modifyData(data, dateRange1, dateRange2) {
 function loopVehiclesApplyDateRange(data, range, id) {
   if (!data) return;
   data.forEach(vehicle => {
-    const result = filterArrayUsingDateRange(vehicle.vehicleDailyPricing, range);
+    const result = filterArrayUsingDateRange(vehicle.vehicleDailyPricing, range, vehicle.weeklyDiscountPercentage, vehicle.monthlyDiscountPercentage);
 
     // Modify the original vehicle object
     if (result) {
@@ -288,7 +394,7 @@ function loopVehiclesApplyDateRange(data, range, id) {
 
   });
 }
-function filterArrayUsingDateRange(data, range) {
+function filterArrayUsingDateRange(data, range, weeklyDiscountPercentage, monthlyDiscountPercentage) {
 
   if (!data) return;
   if (!range) return;
@@ -302,7 +408,7 @@ function filterArrayUsingDateRange(data, range) {
     return objDate >= startDate && objDate <= endDate;
   });
   const daysUnavailable = filteredDates.length;
-  const totalEarned = filteredDates.reduce((sum, item) => sum + item.price, 0);
+  const totalEarned = filteredDates.reduce((sum, item) => sum + item.price, 0).toFixed(0);
   return { days: daysUnavailable, income: totalEarned };
 }
 function dateStringConversion(dateString) {
@@ -321,8 +427,3 @@ function dateStringConversion(dateString) {
   return dateObject
 }
 
-
-function replaceSpacesWithHyp(string) {
-  if (!string) return;
-  return string.replace(/\s/g, '-');
-}

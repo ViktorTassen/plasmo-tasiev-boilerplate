@@ -68,7 +68,7 @@ export default function MembershipPage(props: MembershipPageProps) {
                             <Divider sx={{ my: 2 }}>
                             </Divider>
                             <Typography>Unlock Unlimited Access to Turo Data + Export to XLSX.</Typography>
-                            <Typography>$14.99/mo, cancel anytime!</Typography>
+                            <Typography>$29.99/mo, cancel anytime!</Typography>
                         </Box>
                         <Button variant="contained"
                             onClick={handleUpgradeClick}

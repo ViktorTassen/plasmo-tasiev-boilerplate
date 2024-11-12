@@ -134,7 +134,7 @@ const columnsData: ColumnDefinition[] = [
   {
     title: "Other",
     columns: [
-      { title: "Avg Market $*", field: "marketValue", width: 130, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
+      // { title: "Avg Market $*", field: "marketValue", width: 130, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
       { title: "URL", field: "url", width: 150, formatter: "link", formatterParams: { labelField: "url", target: "_blank" }, headerSort: false },
       { title: "ID", field: "id", width: 50, headerFilter: "input", headerSort: false },
     ]

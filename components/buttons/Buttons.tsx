@@ -169,7 +169,7 @@ const TurrexModalButtons = () => {
                                     <TurrexEnrichingButton onClick={handleEnriching}>
                                         <Stack direction="row" alignItems="center">
                                             <Typography sx={{fontFamily:font}}>
-                                                {!isEnrichingButton ? "Enrich vehicle data ►" : "Stop enriching"}
+                                                {!isEnrichingButton ? "Enrich vehicle data ►" : "Enriching"}
                                             </Typography>
                                             <Typography sx={{fontFamily:font}}>
                                                 {isEnrichingButton && qtyAll && (

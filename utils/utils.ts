@@ -71,7 +71,8 @@ export const formatVehicleData = async (vehicleDetails: any, vehicleDailyPricing
 
     // Add vehicleDailyPricing data to vehicle object
     vehicle.vehicleDailyPricing = await removeUnusedDataFromDailyPricing(vehicleDailyPricing);
-    console.log('vehicle.vehicleDailyPricing length', vehicle.vehicleDailyPricing.length);
+    vehicle.vehicleDailyPricing = applyDiscountsToBookings(vehicle.vehicleDailyPricing, vehicle.weeklyDiscountPercentage, vehicle.monthlyDiscountPercentage);
+
     vehicle.busy365 = result365.days;
     vehicle.totalEarned365 = result365.income;
     vehicle.marketValue = null;
@@ -166,3 +167,49 @@ function convertArrayToString(arr: any[]) {
     const labels = arr.map(item => item.label);
     return labels.join(", ");
 }
+
+
+const applyDiscountsToBookings = (bookings, weeklyDiscount, monthlyDiscount) => {
+    const DISCOUNT_THRESHOLD_WEEKLY = 6;
+    const DISCOUNT_THRESHOLD_MONTHLY = 30;
+    weeklyDiscount = weeklyDiscount / 100;
+    monthlyDiscount = monthlyDiscount / 100;
+  
+    let currentStreak = [];
+    let allStreaks = [];
+  
+    // Helper function to determine if two dates are consecutive
+    const areDatesConsecutive = (date1, date2) => {
+      const oneDay = 24 * 60 * 60 * 1000;
+      return new Date(date2).getTime() - new Date(date1).getTime() === oneDay;
+    };
+  
+    // Sort the bookings by date in ascending order
+    bookings.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  
+    // Loop through bookings to find consecutive ranges
+    for (let i = 0; i < bookings.length; i++) {
+      if (i === 0 || areDatesConsecutive(bookings[i - 1].date, bookings[i].date)) {
+        currentStreak.push(bookings[i]);
+      } else {
+        allStreaks.push(currentStreak);
+        currentStreak = [bookings[i]];
+      }
+    }
+    allStreaks.push(currentStreak);
+  
+    // Apply discounts to identified streaks
+    allStreaks.forEach((streak) => {
+      if (streak.length > DISCOUNT_THRESHOLD_MONTHLY) {
+        streak.forEach((booking) => {
+          booking.price *= 1 - monthlyDiscount;
+        });
+      } else if (streak.length > DISCOUNT_THRESHOLD_WEEKLY) {
+        streak.forEach((booking) => {
+          booking.price *= 1 - weeklyDiscount;
+        });
+      }
+    });
+  
+    return bookings;
+  };
