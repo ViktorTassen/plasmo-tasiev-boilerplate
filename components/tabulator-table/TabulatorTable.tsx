@@ -96,7 +96,7 @@ function TabulatorTable() {
         try {
           await processVehiclesInBatches();
         } catch (error) {
-          console.error('Error processing vehicles:', error);
+          // console.error('Error processing vehicles:', error);
         } finally {
           setIsEnriching(false);
         }
@@ -139,7 +139,7 @@ function TabulatorTable() {
           enrichedCountLocal++;
           setEnrichedCount(enrichedCountLocal);
         } catch (error) {
-          console.error(`Error enriching vehicle ${vehicle.id}, adding to retry queue`, error);
+          // console.error(`Error enriching vehicle ${vehicle.id}, adding to retry queue`, error);
           retryQueue.push(vehicle);
         }
       }));
@@ -166,7 +166,7 @@ function TabulatorTable() {
           enrichedCountLocal++;
           setEnrichedCount(enrichedCountLocal);
         } catch (error) {
-          console.error(`Error enriching vehicle ${vehicle.id} on retry attempt ${retryAttempts + 1}`, error);
+          // console.error(`Error enriching vehicle ${vehicle.id} on retry attempt ${retryAttempts + 1}`, error);
           retryQueue.push(vehicle);
         }
       }));
@@ -205,7 +205,7 @@ function TabulatorTable() {
           Object.assign(vehicle, resp);
           return;
         } else {
-          throw new Error(`Failed to fetch data for vehicle: ${vehicle.id}`);
+          // throw new Error(`Failed to fetch data for vehicle: ${vehicle.id}`);
         }
       } catch (error) {
         attempt++;
@@ -259,85 +259,6 @@ function TabulatorTable() {
 
 
 export default TabulatorTable;
-
-
-
-
-const processVehicles = async (vehicles ,uid) => {
-  const vehiclesToProcess = vehicles.filter(vehicle => vehicle.createdAt === undefined);
-  if (vehiclesToProcess.length === 0) {
-    console.log('No vehicles to process');
-    return false;
-  }
-
-  console.log('Vehicles to process:', vehiclesToProcess);
-
-  let enrichedCount = 0;
-
-  
-  await updateApiCounter(uid, vehiclesToProcess.length);
-
-
-  // Processing vehicles in batches
-  const batchSize = 100; // Number of vehicles to process concurrently in each batch
-  for (let i = 0; i < vehiclesToProcess.length; i += batchSize) {
-    const batch = vehiclesToProcess.slice(i, i + batchSize);
-
-    // Create promises for the current batch
-    const promises = batch.map(async (vehicleToProcess) => {
-      try {
-        const resp = await sendToBackground({
-          name: "brightData",
-          body: {
-            targetVehicleUrl: "https://turo.com/api/vehicle/detail?vehicleId=" + vehicleToProcess.id,
-            targetDailyPricingUrl: createDailyPricingUrl(vehicleToProcess.id)
-          }
-        });
-
-        if (resp !== false) {
-          // Update the vehicle with the new data
-          const vehicle = resp;
-          const existingVehicle = vehicles.find(v => v.id === vehicle.id);
-
-          if (existingVehicle) {
-            console.log('existingVehicle', existingVehicle);
-            // Update the existing vehicle by copying properties from the new vehicle
-            Object.assign(existingVehicle, vehicle);
-          } else {
-            // Add a new vehicle
-            vehicles.push(vehicle);
-          }
-
-          // Increment enriched count
-          enrichedCount++;
-        } else {
-          console.error('Failed to fetch data for vehicle:', vehicleToProcess.id);
-        }
-
-        // Update progress after each vehicle is processed
-        const qtyTotal = vehicles.length;
-        storage.set("qtyAll", `${enrichedCount}/${qtyTotal}`);
-
-      } catch (error) {
-        console.error('Error processing vehicle:', vehicleToProcess.id, error);
-      }
-    });
-
-    // Wait for all promises in the batch to complete
-    await Promise.all(promises);
-
-  }
-
-  // Save the updated vehicles list back to storage
-  await storageLocal.set("vehicles", vehicles);
-
-  // Final count and update
-  const qtyEnriched = vehicles.reduce((acc, v) => (v.createdAt !== undefined ? acc + 1 : acc), 0);
-  const qtyTotal = vehicles.length;
-  storage.set("qtyAll", `${qtyEnriched}/${qtyTotal}`);
-
-  return true;
-};
 
 
 

@@ -7,11 +7,11 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
     try {
         const vehicleData = await fetchDataBright(req.body.targetVehicleUrl);
         const vehicleDailyPricingData = await fetchDataBright(req.body.targetDailyPricingUrl);
-        console.log(vehicleData, vehicleDailyPricingData.dailyPricingResponses);
+        // console.log(vehicleData, vehicleDailyPricingData.dailyPricingResponses);
 
         const newVehicle = await formatVehicleData(vehicleData, vehicleDailyPricingData.dailyPricingResponses);
         if (newVehicle) {
-          console.log("Vehicle added or updated successfully", newVehicle);
+          // console.log("Vehicle added or updated successfully", newVehicle);
           res.send(newVehicle);
         } else {
           res.send(false);
@@ -19,7 +19,7 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
 
       } catch (error) {
         res.send(false)
-        console.error('Error fetching data:', error);
+        // console.error('Error fetching data:', error);
       }
 
 }
