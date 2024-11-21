@@ -132,6 +132,48 @@ export async function updateApiCounter(uid, incrementValue) {
   }
 }
 
+
+export async function updateApiLimit(uid, incrementValue) {
+  try {
+    const counterDocRef = doc(db, 'customers', uid);
+
+    if (!counterDocRef) {
+      return false;
+    }
+
+    const counterDoc = await getDoc(counterDocRef);
+
+    if (counterDoc.exists()) {
+      // Increment existing value by incrementValue
+      const currentValue = counterDoc.data().api_limit || 3200;
+      const newValue = currentValue - incrementValue;
+
+      // Update document with new value
+      await updateDoc(counterDocRef, {
+        api_limit: newValue
+      });
+
+      // Return based on the new value
+      return newValue > 0;
+    } else {
+      // Set the initial value if it doesn't exist
+      const newValue = 3200 - incrementValue;
+      await setDoc(counterDocRef, {
+        api_limit: newValue
+      });
+
+      // Return based on the new value
+      return newValue > 0;
+    }
+  } catch (error) {
+    console.log("Error updating API counter: ", error);
+    return false;
+  }
+}
+
+
+
+
 export async function getLinkToCustomerPortal(user: any, setIsManaging) {
   const functions = getFunctions(app, 'us-central1');
   const createPortalLink = httpsCallable(

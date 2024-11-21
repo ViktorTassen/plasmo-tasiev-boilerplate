@@ -67,7 +67,7 @@ export default function MembershipPage(props: MembershipPageProps) {
                             <Typography>Search results are limited to 5 for testing purposes.</Typography>
                             <Divider sx={{ my: 2 }}>
                             </Divider>
-                            <Typography>Unlock Unlimited Access to Turo Data + Export to XLSX.</Typography>
+                            <Typography>Unlock Access to Turo Data + Export to XLSX. 3000 vehicles limit per month.</Typography>
                             <Typography>$29.99/mo, cancel anytime!</Typography>
                         </Box>
                         <Button variant="contained"
@@ -103,6 +103,7 @@ export default function MembershipPage(props: MembershipPageProps) {
                     <Typography>License email: <b>{user.email}</b></Typography>
                     <Typography>License ID: <b>{user.uid}</b></Typography>
                     <Typography>Extension version: {packageJson.version} </Typography>
+                    <Typography>3000 vehicles limit per month</Typography>
 
                     <Button variant="contained"
                         onClick={handleManageClick}

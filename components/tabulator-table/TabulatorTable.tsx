@@ -7,7 +7,7 @@ import { useStorage } from "@plasmohq/storage/hook";
 import { Storage } from "@plasmohq/storage";
 import columns from "./columnsData";
 import { sendToBackground } from "@plasmohq/messaging"
-import { updateApiCounter } from "~firebase";
+import { updateApiCounter, updateApiLimit } from "~firebase";
 
 declare global {
   interface Window {
@@ -110,6 +110,8 @@ function TabulatorTable() {
   const processVehiclesInBatches = async () => {
     const batchSize = 100;
     let vehiclesToProcess = tableData.filter(vehicle => vehicle.createdAt === undefined);
+    
+    // Update API limit with the number of vehicles to be processed
     await updateApiCounter(uid, vehiclesToProcess.length);
   
     let enrichedCountLocal = enrichedCount;
@@ -131,6 +133,15 @@ function TabulatorTable() {
       }
   
       const batch = vehiclesToProcess.slice(0, batchSize);
+  
+      // Check API limit before processing the batch
+      const limit = await updateApiLimit(uid, batch.length);
+      if (!limit) {
+        alert('API limit reached. Stopping enrichment process. Please contact support');
+        clearInterval(updateInterval);
+        break;
+      }
+  
       vehiclesToProcess = vehiclesToProcess.slice(batchSize);
   
       await Promise.all(batch.map(async (vehicle) => {
@@ -139,7 +150,7 @@ function TabulatorTable() {
           enrichedCountLocal++;
           setEnrichedCount(enrichedCountLocal);
         } catch (error) {
-          // console.error(`Error enriching vehicle ${vehicle.id}, adding to retry queue`, error);
+          // Add vehicle to retry queue if enrichment fails
           retryQueue.push(vehicle);
         }
       }));
@@ -166,7 +177,7 @@ function TabulatorTable() {
           enrichedCountLocal++;
           setEnrichedCount(enrichedCountLocal);
         } catch (error) {
-          // console.error(`Error enriching vehicle ${vehicle.id} on retry attempt ${retryAttempts + 1}`, error);
+          // Add vehicle to retry queue if enrichment fails again
           retryQueue.push(vehicle);
         }
       }));
@@ -187,6 +198,7 @@ function TabulatorTable() {
     // Save the final state of the vehicles to local storage
     await storageLocal.set("vehicles", tableData);
   };
+  
   
   const enrichVehicle = async (vehicle) => {
     const maxRetries = 1; // Only one attempt during the initial batch processing
