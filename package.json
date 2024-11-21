@@ -1,7 +1,7 @@
 {
   "name": "raptor-explorer",
   "displayName": "Raptor Explorer - Car Rental Analytics",
-  "version": "2.4",
+  "version": "2.5",
   "description": "Do your own car rental market research, gain insights and make smarter decisions.",
   "author": "support@raptorexplorer.com",
   "scripts": {
