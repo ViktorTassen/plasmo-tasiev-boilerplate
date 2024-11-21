@@ -145,7 +145,7 @@ export async function updateApiLimit(uid, incrementValue) {
 
     if (counterDoc.exists()) {
       // Increment existing value by incrementValue
-      const currentValue = counterDoc.data().api_limit || 3200;
+      const currentValue = counterDoc.data().api_limit || 2650;
       const newValue = currentValue - incrementValue;
 
       // Update document with new value
@@ -157,7 +157,7 @@ export async function updateApiLimit(uid, incrementValue) {
       return newValue > 0;
     } else {
       // Set the initial value if it doesn't exist
-      const newValue = 3200 - incrementValue;
+      const newValue = 2650 - incrementValue;
       await setDoc(counterDocRef, {
         api_limit: newValue
       });
