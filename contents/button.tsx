@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from "plasmo"
 import { useStorage } from "@plasmohq/storage/hook"
+import { Storage } from "@plasmohq/storage"
+
 
 export const config: PlasmoCSConfig = {
   matches: ["https://turo.com/*/search*"],
@@ -41,9 +43,28 @@ const font = "BasisGrotesque,Avenir,Helvetica Neue,Helvetica,sans-serif"
 
 const TurrexButton = () => {
   console.log("TurrexButton")
-  const [openModal, setOpenModal] = useStorage("openModalTable", false)
-  const [uid, setUid] = useStorage("firebaseUid")
-  const [license, setLicense] = useStorage("license")
+
+  const [openModal, setOpenModal] = useStorage({
+    key: "openModalTable",
+    instance: new Storage({
+        area: "local",
+    })
+}, false)
+
+
+  const [license, setLicense] = useStorage({
+    key: "license",
+    instance: new Storage({
+        area: "local",
+    })
+})
+
+const [uid, setUid] = useStorage({
+    key: "firebaseUid",
+    instance: new Storage({
+        area: "local",
+    })
+})
 
   const fetchData = async () => {
       let licenseResult = await checkLicense(uid);

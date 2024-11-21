@@ -2,6 +2,7 @@ import React from "react";
 // Plasmo
 import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from "plasmo"
 import { useStorage } from "@plasmohq/storage/hook"
+import { Storage } from "@plasmohq/storage"
 import TabulatorTable from "../components/tabulator-table/TabulatorTable";
 
 import customStyles from "data-text:./style.css"
@@ -61,7 +62,12 @@ const TurrexModal = () => {
 
 
 
-  const [openModal, setOpenModal] = useStorage("openModalTable")
+  const [openModal, setOpenModal] = useStorage({
+        key: "openModalTable",
+        instance: new Storage({
+          area: "local",
+        })
+      })
   const handleClose = () => {
     setOpenModal(false);
   };

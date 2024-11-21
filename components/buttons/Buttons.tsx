@@ -16,27 +16,65 @@ const font = "RLBasisGrotesque,Avenir,Helvetica Neue,Helvetica,sans-serif"
 
 
 const TurrexModalButtons = () => {
-    const [license, setLicense] = useStorage("license")
-    const [uid, setUid] = useStorage("firebaseUid")
+    const [license, setLicense] = useStorage({
+        key: "license",
+        instance: new Storage({
+            area: "local",
+        })
+    })
+
+    const [uid, setUid] = useStorage({
+        key: "firebaseUid",
+        instance: new Storage({
+            area: "local",
+        })
+    })
 
     const [tableData, setTableData] = useStorage({
         key: "vehicles",
         instance: new Storage({
-          area: "local",
+            area: "local",
         })
-      }) // get vehicles from local storage
+    }) // get vehicles from local storage
 
     const [qtyLength, setQtyLength] = useState(false)
 
     const [loading, setLoading] = useState(true)
     // buttons
-    const [openModal, setOpenModal] = useStorage("openModalTable")
-    const [isRecording, setIsRecording] = useStorage("isRecording", false)
+    const [openModal, setOpenModal] = useStorage({
+        key: "openModalTable",
+        instance: new Storage({
+            area: "local",
+        })
+    })
+    const [isRecording, setIsRecording] = useStorage({
+        key: "isRecording",
+        instance: new Storage({
+            area: "local",
+        })
+    }, false)
 
-    const [isEnrichingButton, setIsEnrichingButton] = useStorage("isEnriching")
-    const [qtyAll, setQtyAll] = useStorage("qtyAll")
+    const [isEnrichingButton, setIsEnrichingButton] = useStorage({
+        key: "isEnriching",
+        instance: new Storage({
+            area: "local",
+        })
+    })
 
-    const [download, setDownload] = useStorage("download", false)
+    const [qtyAll, setQtyAll] = useStorage({
+        key: "qtyAll",
+        instance: new Storage({
+            area: "local",
+        })
+    })
+
+    const [download, setDownload] = useStorage({
+        key: "download",
+        instance: new Storage({
+            area: "local",
+        })
+    }, false)
+
 
     const TurrexButton = styled(Button)({
         textTransform: 'none',
@@ -49,7 +87,7 @@ const TurrexModalButtons = () => {
         padding: '0 14px',
     }); // for custom styles;
 
-    const TurrexSignButton = styled(    TurrexButton)({
+    const TurrexSignButton = styled(TurrexButton)({
         width: '200px',
         backgroundColor: '#000',
         color: '#fff',
@@ -120,11 +158,11 @@ const TurrexModalButtons = () => {
 
     useEffect(() => {
         if (openModal) {
-           const getVehiclesLength = async () => {
-           let x = await storageLocal.get('vehicles');
-           if (x?.length > 0) setQtyLength(true);
-           }
-        getVehiclesLength();
+            const getVehiclesLength = async () => {
+                let x = await storageLocal.get('vehicles');
+                if (x?.length > 0) setQtyLength(true);
+            }
+            getVehiclesLength();
         }
     }, [tableData])
 
@@ -141,78 +179,78 @@ const TurrexModalButtons = () => {
             {/* Header and close button */}
             <Stack direction="row" spacing={2}>
                 <img src={iconCropped} style={{ width: '33px', marginLeft: 10 }} />
-                <Typography sx={{ fontWeight: 700, fontFamily:font }}> Raptor Explorer</Typography>
+                <Typography sx={{ fontWeight: 700, fontFamily: font }}> Raptor Explorer</Typography>
             </Stack>
             <CloseButton onClick={handleClose}>
                 <Close />
             </CloseButton>
             <ExtPageButton onClick={handleLoginClick}>
-                <Typography sx={{fontFamily:font}}>
-                   Open extension page (Manage subscription)
+                <Typography sx={{ fontFamily: font }}>
+                    Open extension page (Manage subscription)
                 </Typography>
             </ExtPageButton>
 
-                {!loading && (
+            {!loading && (
                 <React.Fragment>
                     <Stack direction="row" spacing={2}>
                         {uid ? (
                             <React.Fragment>
                                 <TurrexRecordingButton onClick={handleRecording}>
-                                    <Typography sx={{fontFamily:font}}>
+                                    <Typography sx={{ fontFamily: font }}>
                                         {!isRecording ? "Start recording" : "Stop recording"}
                                     </Typography>
                                 </TurrexRecordingButton>
 
                                 {/* Enrich button */}
-                                { qtyLength && (
-                                <React.Fragment>
-                                    <TurrexEnrichingButton onClick={handleEnriching}>
-                                        <Stack direction="row" alignItems="center">
-                                            <Typography sx={{fontFamily:font}}>
-                                                {!isEnrichingButton ? "Enrich vehicle data ►" : "Enriching"}
-                                            </Typography>
-                                            <Typography sx={{fontFamily:font}}>
-                                                {isEnrichingButton && qtyAll && (
-                                                    <span style={{ marginLeft: 10 }}>{qtyAll}</span>
-                                                )}
-                                            </Typography>
-                                            <Typography sx={{fontFamily:font}}>
-                                                {isEnrichingButton && (
-                                                    <CircularProgress size={11} sx={{ color: "#000", ml: "10px" }} />
-                                                )}
-                                            </Typography>
-                                        </Stack>
-                                    </TurrexEnrichingButton>
+                                {qtyLength && (
+                                    <React.Fragment>
+                                        <TurrexEnrichingButton onClick={handleEnriching}>
+                                            <Stack direction="row" alignItems="center">
+                                                <Typography sx={{ fontFamily: font }}>
+                                                    {!isEnrichingButton ? "Enrich vehicle data ►" : "Enriching"}
+                                                </Typography>
+                                                <Typography sx={{ fontFamily: font }}>
+                                                    {isEnrichingButton && qtyAll && (
+                                                        <span style={{ marginLeft: 10 }}>{qtyAll}</span>
+                                                    )}
+                                                </Typography>
+                                                <Typography sx={{ fontFamily: font }}>
+                                                    {isEnrichingButton && (
+                                                        <CircularProgress size={11} sx={{ color: "#000", ml: "10px" }} />
+                                                    )}
+                                                </Typography>
+                                            </Stack>
+                                        </TurrexEnrichingButton>
 
-                                    <TurrexButton onClick={handleExport}>
-                                        <Typography sx={{fontFamily:font}}>Export to XLSX ↧</Typography>
-                                    </TurrexButton>
+                                        <TurrexButton onClick={handleExport}>
+                                            <Typography sx={{ fontFamily: font }}>Export to XLSX ↧</Typography>
+                                        </TurrexButton>
 
-                                    <TurrexButton onClick={handleClearClick}>
-                                        <Typography sx={{fontFamily:font}}>Clear Results</Typography>
-                                    </TurrexButton>
-                                </React.Fragment>
-                                 )}
+                                        <TurrexButton onClick={handleClearClick}>
+                                            <Typography sx={{ fontFamily: font }}>Clear Results</Typography>
+                                        </TurrexButton>
+                                    </React.Fragment>
+                                )}
 
                             </React.Fragment>
-                           
+
                         ) : (
                             <React.Fragment>
                                 {/* Sign in button: no uid */}
                                 <TurrexSignButton onClick={handleLoginClick}>
-                                    <Typography sx={{fontFamily:font}}>Sign in with Google</Typography>
+                                    <Typography sx={{ fontFamily: font }}>Sign in with Google</Typography>
                                 </TurrexSignButton>
                             </React.Fragment>
                         )}
                     </Stack>
-                   
+
                 </React.Fragment>
-                )}
+            )}
 
             {/* InfoText */}
             <Box sx={{ marginTop: 2 }} >
                 {!uid && !loading && (
-                    <Typography sx={{fontFamily:font}}>
+                    <Typography sx={{ fontFamily: font }}>
                         Please{' '}
                         <a href='' id="login-link" target="_blank" onClick={handleLoginClick} rel="noreferrer">
                             Sign in with Google
@@ -222,14 +260,14 @@ const TurrexModalButtons = () => {
                 )}
 
                 {license?.status == 'off' && uid && (
-                    <Typography sx={{fontFamily:font}}>
+                    <Typography sx={{ fontFamily: font }}>
                         Table is limited to first 5 saved results. Unlock all features by {' '}
                         <a id="login-link" href='' target="_blank" onClick={handleLoginClick}>
                             upgrading to Pro</a>{' '}and refresh the page.
                     </Typography>
                 )}
 
-                <Typography sx={{fontFamily:font}}>
+                <Typography sx={{ fontFamily: font }}>
                     Check the <a id="info" href="https://raptorexplorer.com/instructions" target="_blank" rel="noreferrer">instructions</a> on how to use the extension.
                 </Typography>
             </Box>

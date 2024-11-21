@@ -1,6 +1,6 @@
 import { type ColumnDefinition } from 'react-tabulator';
 import { Storage } from "@plasmohq/storage"
-const storage = new Storage();
+const storage = new Storage({ area: "local" });
 
 
 function minMaxFilterEditor(cell, onRendered, success, cancel, editorParams) {

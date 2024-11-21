@@ -7,7 +7,7 @@ import { addDays, isSameDay, startOfDay, startOfYear, subDays, subMonths, subYea
 
 import { useStorage } from "@plasmohq/storage/hook"
 import { Storage } from "@plasmohq/storage"
-const storage = new Storage();
+const storage = new Storage({ area: "local" });
 
 import { Button, Stack, styled } from '@mui/material';
 
@@ -22,10 +22,15 @@ backgroundColor: '#593cfb',
 
 function DateRange(props) {
   // console.log(props);
-  const [savedDateRange, setSavedDateRange, {
-    setRenderValue,
-    setStoreValue,
-  }] = useStorage(props["date-range-id"], (v) => v === undefined ? [{startDate: subMonths(new Date(), 1), endDate: new Date(), key: 'selection'}] : v)
+  
+  const [savedDateRange, setSavedDateRange, { setRenderValue, setStoreValue }] = useStorage({
+    key: props["date-range-id"],
+    instance: new Storage({
+      area: "local"
+    }),
+  }, (v) => v === undefined
+  ? [{ startDate: subMonths(new Date(), 1), endDate: new Date(), key: 'selection' }]
+  : v);
 
 
   const handleSave = async () => {

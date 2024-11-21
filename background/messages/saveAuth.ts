@@ -1,6 +1,6 @@
 import type { PlasmoMessaging } from "@plasmohq/messaging"
 import { Storage } from "@plasmohq/storage"
-const storage = new Storage();
+const storage = new Storage({ area: "local" });
 
 const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
   try {

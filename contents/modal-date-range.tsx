@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 // Plasmo
 import type { PlasmoCSConfig, PlasmoGetInlineAnchor } from "plasmo"
 import { useStorage } from "@plasmohq/storage/hook"
+import { Storage } from "@plasmohq/storage"
 import DateRange from "../components/tabulator-table/DateRange";
 
 export const config: PlasmoCSConfig = {
@@ -58,8 +59,20 @@ const TurrexModalDateRange = () => {
     }); // for custom styles;
 
 
-    const [openModalDateRange, setOpenModalDateRange] = useStorage('openModalDateRange', false)
-    const [selectedDateRangeId, setSelectedDateRangeId] = useStorage("selectedDateRangeId", null)
+    const [openModalDateRange, setOpenModalDateRange] = useStorage({
+        key: "openModalDateRange",
+        instance: new Storage({
+            area: "local",
+        })
+    }, false)
+
+    const [selectedDateRangeId, setSelectedDateRangeId] = useStorage({
+        key: "selectedDateRangeId",
+        instance: new Storage({
+            area: "local",
+        })
+    }, null)
+
 
     useEffect(() => {
         if (selectedDateRangeId) {

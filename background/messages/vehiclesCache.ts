@@ -6,12 +6,12 @@ let vehicles = [];
 let timeMS = 0;
 
 async function getDefaultRecording() {
-    isRecording = await storage.get("isRecording");
+    isRecording = await storageLocal.get("isRecording");
     return isRecording;
 };
 let isRecording = getDefaultRecording() || false;
 
-storage.watch({
+storageLocal.watch({
     "isRecording": (c) => {
         isRecording = c.newValue;
         console.log(isRecording)

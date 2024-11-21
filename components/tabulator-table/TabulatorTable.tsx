@@ -25,18 +25,64 @@ const storageLocal = new Storage({ area: 'local' });
 function TabulatorTable() {
   let tableRef = useRef(null);
   const [tableData, setTableData] = useStorage({
-    key: "vehicles", instance: storageLocal
+    key: "vehicles",  
+    instance: new Storage({
+      area: "local",
+    })
   });
-  const [license, setLicense] = useStorage("license");
-  const [uid] = useStorage("firebaseUid");
+  const [license, setLicense] = useStorage({
+    key: "license",
+    instance: new Storage({
+      area: "local",
+    })
+  });
+
+  const [uid] = useStorage({
+    key: "firebaseUid",
+    instance: new Storage({
+      area: "local",
+    })
+  });
+
   const [loading, setLoading] = useState(true);
-  const [download, setDownload] = useStorage("download");
-  const [isEnriching, setIsEnriching] = useStorage("isEnriching");
+
+  const [download, setDownload] = useStorage({
+    key: "download",
+    instance: new Storage({
+      area: "local",
+    })
+  });
+
+  const [isEnriching, setIsEnriching] = useStorage({
+    key: "isEnriching",
+    instance: new Storage({
+      area: "local",
+    })
+  });
+
   const [col, setCol] = useState(columns);
-  const [filters, setFilters] = useStorage("filters");
+  const [filters, setFilters] = useStorage({
+    key: "filters",
+    instance: new Storage({
+      area: "local",
+    })
+  });
   const [filtersListener, setFiltersListener] = useState(false);
-  const [dateRange1] = useStorage("1");
-  const [dateRange2] = useStorage("2");
+
+  const [dateRange1] = useStorage({
+    key: "1",
+    instance: new Storage({
+      area: "local",
+    })
+  });
+
+  const [dateRange2] = useStorage({
+    key: "2",
+    instance: new Storage({
+      area: "local",
+    })
+  });
+
 
   const [enrichedCount, setEnrichedCount] = useState(0);
 
@@ -113,18 +159,18 @@ function TabulatorTable() {
     vehiclesToProcess = vehiclesToProcess.slice(0, license.license ? undefined : 5)
     // Update API limit with the number of vehicles to be processed
     await updateApiCounter(uid, vehiclesToProcess.length);
-  
+
     let enrichedCountLocal = enrichedCount;
     const enrichedVehicles = []; // Temporary in-memory storage
-  
+
     // Update qtyAll initially and then set an interval to update it every 3 seconds
-    storage.set("qtyAll", `${enrichedCountLocal}/${tableData.length}`);
+    storageLocal.set("qtyAll", `${enrichedCountLocal}/${tableData.length}`);
     const updateInterval = setInterval(() => {
-      storage.set("qtyAll", `${enrichedCountLocal}/${tableData.length}`);
+      storageLocal.set("qtyAll", `${enrichedCountLocal}/${tableData.length}`);
     }, 5000);
-  
+
     const retryQueue = [];
-  
+
     // Process initial batches
     while (vehiclesToProcess.length > 0 && isEnriching) {
       if (!isEnriching) {
@@ -132,9 +178,9 @@ function TabulatorTable() {
         console.log('Enrichment process stopped by user.');
         break;
       }
-  
+
       const batch = vehiclesToProcess.slice(0, batchSize);
-  
+
       // Check API limit before processing the batch
       const limit = await updateApiLimit(uid, batch.length);
       if (!limit) {
@@ -142,9 +188,9 @@ function TabulatorTable() {
         clearInterval(updateInterval);
         break;
       }
-  
+
       vehiclesToProcess = vehiclesToProcess.slice(batchSize);
-  
+
       await Promise.all(batch.map(async (vehicle) => {
         try {
           await enrichVehicle(vehicle);
@@ -155,26 +201,26 @@ function TabulatorTable() {
           retryQueue.push(vehicle);
         }
       }));
-  
+
       // Update storage after each batch
       await storageLocal.set("vehicles", enrichedVehicles);
     }
-  
+
     // Retry failed vehicles after initial batches are complete
     let retryAttempts = 0;
     const maxRetryAttempts = 3;
-  
+
     while (retryQueue.length > 0 && retryAttempts < maxRetryAttempts && isEnriching) {
       if (!isEnriching) {
         clearInterval(updateInterval);
         console.log('Enrichment process stopped by user.');
         break;
       }
-  
+
       console.log(`Retry attempt ${retryAttempts + 1} for ${retryQueue.length} vehicles.`);
       const currentRetryQueue = [...retryQueue];
       retryQueue.length = 0;
-  
+
       await Promise.all(currentRetryQueue.map(async (vehicle) => {
         try {
           await enrichVehicle(vehicle);
@@ -185,25 +231,25 @@ function TabulatorTable() {
           retryQueue.push(vehicle);
         }
       }));
-  
+
       retryAttempts++;
     }
-  
+
     // Stop the interval and save the final qtyAll value
     clearInterval(updateInterval);
     storage.set("qtyAll", `${enrichedCountLocal}/${tableData.length}`);
-  
+
     if (retryQueue.length === 0) {
       console.log('All vehicles enriched successfully.');
     } else {
       console.log(`${retryQueue.length} vehicles could not be enriched after ${maxRetryAttempts} retries.`);
     }
-  
+
     // // Save the final state of the vehicles to local storage
     // await storageLocal.set("vehicles", tableData);
   };
-  
-  
+
+
   const enrichVehicle = async (vehicle) => {
     const maxRetries = 1; // Only one attempt during the initial batch processing
     let attempt = 0;
@@ -216,7 +262,7 @@ function TabulatorTable() {
             targetDailyPricingUrl: createDailyPricingUrl(vehicle.id)
           }
         });
-  
+
         if (resp !== false) {
           Object.assign(vehicle, resp);
           return;
@@ -232,7 +278,7 @@ function TabulatorTable() {
       }
     }
   };
-  
+
 
   useEffect(() => {
     const dateRanges = [
