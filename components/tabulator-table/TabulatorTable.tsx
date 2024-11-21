@@ -110,17 +110,18 @@ function TabulatorTable() {
   const processVehiclesInBatches = async () => {
     const batchSize = 100;
     let vehiclesToProcess = tableData.filter(vehicle => vehicle.createdAt === undefined);
-    
+    vehiclesToProcess = vehiclesToProcess.slice(0, license.license ? undefined : 5)
     // Update API limit with the number of vehicles to be processed
     await updateApiCounter(uid, vehiclesToProcess.length);
   
     let enrichedCountLocal = enrichedCount;
+    const enrichedVehicles = []; // Temporary in-memory storage
   
     // Update qtyAll initially and then set an interval to update it every 3 seconds
     storage.set("qtyAll", `${enrichedCountLocal}/${tableData.length}`);
     const updateInterval = setInterval(() => {
       storage.set("qtyAll", `${enrichedCountLocal}/${tableData.length}`);
-    }, 3000);
+    }, 5000);
   
     const retryQueue = [];
   
@@ -149,11 +150,14 @@ function TabulatorTable() {
           await enrichVehicle(vehicle);
           enrichedCountLocal++;
           setEnrichedCount(enrichedCountLocal);
+          enrichedVehicles.push(vehicle); // Add enriched vehicle to in-memory storage
         } catch (error) {
-          // Add vehicle to retry queue if enrichment fails
           retryQueue.push(vehicle);
         }
       }));
+  
+      // Update storage after each batch
+      await storageLocal.set("vehicles", enrichedVehicles);
     }
   
     // Retry failed vehicles after initial batches are complete
@@ -195,8 +199,8 @@ function TabulatorTable() {
       console.log(`${retryQueue.length} vehicles could not be enriched after ${maxRetryAttempts} retries.`);
     }
   
-    // Save the final state of the vehicles to local storage
-    await storageLocal.set("vehicles", tableData);
+    // // Save the final state of the vehicles to local storage
+    // await storageLocal.set("vehicles", tableData);
   };
   
   
