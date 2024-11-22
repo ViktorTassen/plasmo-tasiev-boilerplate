@@ -20,15 +20,6 @@ export const getInlineAnchor: PlasmoGetInlineAnchor = () => ({
 });
 
 
-// export const getInlineAnchor: PlasmoGetInlineAnchor = async () => {
-
-//   if (document.querySelector(`.filter-buttons`)) {
-//     return document.querySelector(`.filter-buttons`)
-//   } else {
-//     return document.querySelector(`.searchFilter`)
-//   };
-// };
-
 
 
 const styleElement = document.createElement("style")

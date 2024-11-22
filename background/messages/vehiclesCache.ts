@@ -19,37 +19,57 @@ storageLocal.watch({
 });
 
 const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
-    switch (req.body.type) {
-        case 'add': // process new vehicles from intercepted response
-            // if not recording, do nothing
-            if (!isRecording) {
-                console.log('not recording');
-                return;
-            };
-            // add unique vehicles to array
-            vehicles = await storageLocal.get('vehicles') || [];
-            const vehicleIds = new Set(vehicles.map(vehicle => vehicle.id));
-            const uniqueElements = req.body.data.filter(obj => !vehicleIds.has(obj.id));
-            await removeUnusedDataInUniqueElements(uniqueElements)
-            vehicles = vehicles.concat(uniqueElements);
-
-            // save vehicles to local storage
-            await storageLocal.set('vehicles', vehicles);
-            let currentTimeMS = Date.now();
-            if (currentTimeMS - timeMS > 1000) {
-                await storage.set('uniqueElementsAdded', uniqueElements.length);
-                // console.log('vehicles length: ', vehicles.length, vehicles);
-                timeMS = currentTimeMS;
-            }
-            timeMS = Date.now();
-            break;
-
-        case 'clear': // update (enrich) vehicles
-            vehicles = [];
-            await storageLocal.set('vehicles', []);
-            break;
-    };
-}
+    try {
+      switch (req.body.type) {
+        case "add":
+          // If not recording, return early
+          if (!isRecording) {
+            console.log("Not recording");
+            res.send({ message: "Not recording", success: false });
+            return;
+          }
+  
+          // Process new vehicles
+          vehicles = (await storageLocal.get("vehicles")) || [];
+          const vehicleIds = new Set(vehicles.map((vehicle) => vehicle.id));
+          const uniqueElements = req.body.data.filter(
+            (obj) => !vehicleIds.has(obj.id)
+          );
+  
+          await removeUnusedDataInUniqueElements(uniqueElements);
+          vehicles = vehicles.concat(uniqueElements);
+  
+          // Save vehicles to local storage
+          await storageLocal.set("vehicles", vehicles);
+  
+          const currentTimeMS = Date.now();
+          if (currentTimeMS - timeMS > 1000) {
+            await storage.set("uniqueElementsAdded", uniqueElements.length);
+            timeMS = currentTimeMS;
+          }
+  
+          res.send({
+            message: "Vehicles added",
+            addedCount: uniqueElements.length,
+            success: true,
+          });
+          break;
+  
+        case "clear":
+          vehicles = [];
+          await storageLocal.set("vehicles", []);
+          res.send({ message: "Vehicles cleared", success: true });
+          break;
+  
+        default:
+          res.send({ message: "Unknown request type", success: false });
+          break;
+      }
+    } catch (error) {
+    //   console.error("Error in handler:", error);
+      res.send({ message: "An error occurred", success: false });
+    }
+  };
 
 export default handler
 

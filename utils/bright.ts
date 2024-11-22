@@ -19,7 +19,7 @@ export const fetchDataBright = async function (targetUrl: string) {
     return responseData; // Return the parsed JSON data
 
   } catch (error) {
-    console.error('Error fetching data:', error); // Log the error
+    // console.error('Error fetching data:', error); // Log the error
     throw error; // Rethrow the error to handle it in the calling function
   }
 };

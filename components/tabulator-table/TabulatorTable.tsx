@@ -297,7 +297,14 @@ function TabulatorTable() {
 
   const options = {
     downloadDataFormatter: (data) => data,
-    downloadReady: (fileContents, blob) => blob,
+    downloadEncoder:function(fileContents, mimeType){
+      //fileContents - the unencoded contents of the file
+      //mimeType - the suggested mime type for the output
+
+      //custom action to send blob to server could be included here
+
+      return new Blob([fileContents], {type:mimeType}); //must return a blob to proceed with the download, return false to abort download
+  }
   };
 
   const downloadConfig = {
@@ -342,8 +349,11 @@ const updateDateRangeElement = (dateRange, dateRangeElement) => {
     const startDate = DateTime.fromISO(dateRange[0].startDate).toFormat('MMM d, yyyy');
     const endDate = DateTime.fromISO(dateRange[0].endDate).toFormat('MMM d, yyyy');
     dateRangeElement.innerHTML = `${startDate} - ${endDate}`;
+    dateRangeElement.setAttribute('id', `date-range-${dateRangeElement.getAttribute('date-range-id')}`);
+    dateRangeElement.setAttribute('name', `date-range-${dateRangeElement.getAttribute('date-range-id')}`);
   }
 };
+
 const getDateRangeString = (dateRange) => {
   if (dateRange) {
     const startDate = DateTime.fromISO(dateRange[0].startDate).toFormat('MMM d, yyyy');

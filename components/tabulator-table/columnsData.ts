@@ -4,9 +4,10 @@ const storage = new Storage({ area: "local" });
 
 
 function minMaxFilterEditor(cell, onRendered, success, cancel, editorParams) {
+  const uniqueId = cell.getColumn().getField(); // Get unique field name
   const container = document.createElement("span");
-  const start = createInput("Min");
-  const end = createInput("Max");
+  const start = createInput("Min", uniqueId);
+  const end = createInput("Max", uniqueId);
 
   function buildValues() {
     success({
@@ -25,7 +26,8 @@ function minMaxFilterEditor(cell, onRendered, success, cancel, editorParams) {
   container.appendChild(end);
 
   return container;
-} // Custom max-min header filter
+}
+ // Custom max-min header filter
 function minMaxFilterFunction(headerValue, rowValue, rowData, filterParams) {
   const start = parseFloat(headerValue.start);
   const end = parseFloat(headerValue.end);
@@ -41,17 +43,16 @@ function minMaxFilterFunction(headerValue, rowValue, rowData, filterParams) {
     return headerValue.end === "" || value <= end;
   }
 } // Custom max-min filter function
-function createInput(placeholder) {
+function createInput(placeholder, uniqueId) {
   const input = document.createElement("input");
   input.setAttribute("placeholder", placeholder);
+  input.setAttribute("id", `filter-${placeholder.toLowerCase()}-${uniqueId}`); // Unique id
   input.style.padding = "4px";
-  // input.style.marginLeft = "1px";
   input.style.marginRight = "1px";
   input.style.width = "49%";
   input.style.boxSizing = "border-box";
   return input;
 }
-
 
 
 
@@ -69,27 +70,27 @@ const columnsData: ColumnDefinition[] = [
     title: "Vehicle Information",
     
     columns: [
-      { title: "Location", field: "address", width: 70, headerFilter: "input", headerSort: false },
-      { title: "Type", field: "type", width: 70, headerFilter: "select", headerSort: false, editorParams: { values: { "SUV": "SUV", "Car": "Car", "Truck": "Truck", "Van": "Passenger Van", "Cargo Van": "Cargo Van", clearable: true } }, headerFilterParams: { values: { "SUV": "SUV", "Car": "Car", "Truck": "Truck", "Van": "Passenger Van", "Cargo Van": "Cargo Van" } } },
-      { title: "Make", field: "make", width: 70, headerFilter: "input" },
-      { title: "Model", field: "model", width: 90, headerFilter: "input" },
-      { title: "Year", field: "year", width: 100, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
-      { title: "Color", field: "color", width: 70, headerFilter: "input", headerSort: false },
-      { title: "Trim", field: "trim", width: 70, headerFilter: "input", headerSort: false },
-      { title: "Features", field: "features", width: 80, headerFilter: "input", headerSort: false },
+      { title: "Location", field: "address", width: 70,  headerSort: false },
+      { title: "Type", field: "type", width: 70,  headerSort: false, editorParams: { values: { "SUV": "SUV", "Car": "Car", "Truck": "Truck", "Van": "Passenger Van", "Cargo Van": "Cargo Van", clearable: true } }, headerFilterParams: { values: { "SUV": "SUV", "Car": "Car", "Truck": "Truck", "Van": "Passenger Van", "Cargo Van": "Cargo Van" } } },
+      { title: "Make", field: "make", width: 70,  },
+      { title: "Model", field: "model", width: 90,  },
+      { title: "Year", field: "year", width: 100,   headerFilterLiveFilter: false },
+      { title: "Color", field: "color", width: 70,  headerSort: false },
+      { title: "Trim", field: "trim", width: 70,  headerSort: false },
+      { title: "Features", field: "features", width: 80,  headerSort: false },
     ],
   },
   {
     title: "Vehicle Utilization and Earnings",
     columns: [
       { title: "CreatedAt", field: "createdAt", sorter: "date", headerSort: false },
-      { title: "Days", field: "daysOn", width: 80, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
-      { title: "Trips", field: "completedTrips", width: 80, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
-      { title: "T/D", field: "tripDayRatio", width: 80, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
-      { title: "$day", field: "averagePrice", width: 80, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
-      { title: "MaxDistanceDaily", field: "dailyDistance", width: 110, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
-      { title: "%WeeklyDiscount", field: "weeklyDiscountPercentage", width: 80, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
-      { title: "%MonthlyDiscount", field: "monthlyDiscountPercentage", width: 80, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
+      { title: "Days", field: "daysOn", width: 80,  headerFilterLiveFilter: false },
+      { title: "Trips", field: "completedTrips", width: 80,  headerFilterLiveFilter: false },
+      { title: "T/D", field: "tripDayRatio", width: 80,   headerFilterLiveFilter: false },
+      { title: "$day", field: "averagePrice", width: 80,   headerFilterLiveFilter: false },
+      { title: "MaxDistanceDaily", field: "dailyDistance", width: 110,   headerFilterLiveFilter: false },
+      { title: "%WeeklyDiscount", field: "weeklyDiscountPercentage", width: 80,   headerFilterLiveFilter: false },
+      { title: "%MonthlyDiscount", field: "monthlyDiscountPercentage", width: 80,   headerFilterLiveFilter: false },
     ]
   },
   {
@@ -99,8 +100,8 @@ const columnsData: ColumnDefinition[] = [
       storage.set("selectedDateRangeId", column.getDefinition().title);
     }, 
     columns: [
-      { title: "BusyDays", field: "busy1", width: 110, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
-      { title: "Income", field: "income1", width: 110, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
+      { title: "BusyDays", field: "busy1", width: 110,   headerFilterLiveFilter: false },
+      { title: "Income", field: "income1", width: 110,   headerFilterLiveFilter: false },
     ]
   },
   {
@@ -110,33 +111,32 @@ const columnsData: ColumnDefinition[] = [
       storage.set("selectedDateRangeId", column.getDefinition().title);
     }, 
     columns: [
-      { title: "BusyDays", field: "busy2", width: 110, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
-      { title: "Income", field: "income2", width: 110, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
+      { title: "BusyDays", field: "busy2", width: 110,   headerFilterLiveFilter: false },
+      { title: "Income", field: "income2", width: 110,   headerFilterLiveFilter: false },
     ]
   },
 
   {
     title: "Host info",
     columns: [
-      { title: "Plan", field: "plan", headerFilter: "select", headerSort: false, editorParams: { values: { "60": "60", "75": "75", "80": "80", "85": "85", "90": "90", clearable: true } }, headerFilterParams: { values: { "60": "60", "75": "75", "80": "80", "85": "85", "90": "90" } } },
-      { title: "StarHost", field: "isAllStarHost", headerFilter: "select", headerSort: false, editorParams: { values: { "true": "true", "false": "false", clearable: true } }, headerFilterParams: { values: { "true": "true", "false": "false" } } },
-      { title: "HostId", field: "hostId", headerFilter: "input", headerSort: false },
+      { title: "Plan", field: "plan",  headerSort: false, editorParams: { values: { "60": "60", "75": "75", "80": "80", "85": "85", "90": "90", clearable: true } }, headerFilterParams: { values: { "60": "60", "75": "75", "80": "80", "85": "85", "90": "90" } } },
+      { title: "StarHost", field: "isAllStarHost",  headerSort: false, editorParams: { values: { "true": "true", "false": "false", clearable: true } }, headerFilterParams: { values: { "true": "true", "false": "false" } } },
+      { title: "HostId", field: "hostId", headerSort: false },
     ]
   },
   {
     title: "User Interaction",
     columns: [
       { title: "Favs", field: "numberOfFavorites" },
-      { title: "Reviews", field: "numberOfReviews", width: 100, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
-      { title: "Ratings", field: "ratings", width: 100, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
+      { title: "Reviews", field: "numberOfReviews", width: 100,   headerFilterLiveFilter: false },
+      { title: "Ratings", field: "ratings", width: 100,   headerFilterLiveFilter: false },
     ]
   },
   {
     title: "Other",
     columns: [
-      // { title: "Avg Market $*", field: "marketValue", width: 130, headerFilter: minMaxFilterEditor, headerFilterFunc: minMaxFilterFunction, headerFilterLiveFilter: false },
       { title: "URL", field: "url", width: 150, formatter: "link", formatterParams: { labelField: "url", target: "_blank" }, headerSort: false },
-      { title: "ID", field: "id", width: 50, headerFilter: "input", headerSort: false },
+      { title: "ID", field: "id", width: 50, headerSort: false },
     ]
   },
 ]
